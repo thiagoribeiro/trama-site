@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trama | Architecture</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+  <body>
+    <header class="topbar"><div class="container topbar-row"><a class="brand" href="index.html">Trama</a><nav class="nav-links"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="community.html">Community</a></nav><div class="actions"><a class="btn ghost" href="../README.md">README</a></div></div></header>
+    <main class="container doc-layout reveal">
+      <aside class="sidebar">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#components">Components</a>
+        <a href="#lifecycle">Execution Lifecycle</a>
+        <a href="#diagram">Mermaid Diagram</a>
+      </aside>
+      <article class="content">
+        <h2 id="overview">Architecture</h2>
+        <p>Trama exposes an API for definition management and execution triggers, then processes saga executions asynchronously via queue-backed workers.</p>
+
+        <h3 id="components">Core Components</h3>
+        <div class="arch-flow">
+          <span class="arch-node">Client</span><span class="arch-arrow">→</span>
+          <span class="arch-node">Ktor API</span><span class="arch-arrow">→</span>
+          <span class="arch-node">Queue</span><span class="arch-arrow">→</span>
+          <span class="arch-node">Processor</span><span class="arch-arrow">→</span>
+          <span class="arch-node">Executor</span><span class="arch-arrow">→</span>
+          <span class="arch-node">Services</span>
+        </div>
+        <ul>
+          <li><code>Application</code>: REST endpoints and runtime bootstrap.</li>
+          <li><code>RuntimeBootstrap</code>: wires queue, consumer, processor, store, and observability.</li>
+          <li><code>SagaExecutionProcessor</code>: worker orchestration, ack/retry control, and rate-limit integration.</li>
+          <li><code>DefaultSagaExecutor</code>: step execution, retry policy decisions, compensation transitions.</li>
+          <li><code>SagaExecutionStore</code>: persistence abstraction (Redis/Postgres backing).</li>
+        </ul>
+
+        <h3 id="lifecycle">Execution Lifecycle</h3>
+        <ol>
+          <li>Definition is validated and stored (or provided inline).</li>
+          <li>Execution request enqueues a saga payload.</li>
+          <li>Consumer claims ready messages and hands them to workers.</li>
+          <li>Executor runs steps, persists outcomes, and either:
+            succeeds, fails terminally, or reenqueues for retry/compensation.</li>
+          <li>Metrics and traces are emitted throughout all stages.</li>
+        </ol>
+
+        <h3 id="diagram">Mermaid Diagram</h3>
+        <div class="codeblock"><pre class="mermaid">
+flowchart TB
+
+classDef api fill:#1e293b,stroke:#60a5fa,stroke-width:2px,color:#e5e7eb;
+classDef runtime fill:#1e293b,stroke:#4ade80,stroke-width:2px,color:#e5e7eb;
+classDef infra fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#e5e7eb;
+classDef obs fill:#1e293b,stroke:#c084fc,stroke-width:2px,color:#e5e7eb;
+classDef external fill:#1e293b,stroke:#fb7185,stroke-width:2px,color:#e5e7eb;
+
+C[Client]:::api
+
+subgraph Trama
+direction TB
+
+A[Ktor API]:::api
+
+Q[Redis Queue]:::infra
+P[Saga Processor]:::runtime
+E[Saga Executor]:::runtime
+ST[Postgres Store]:::infra
+
+M[Prometheus Metrics]:::obs
+T[OpenTelemetry Traces]:::obs
+
+end
+
+S[External Services]:::external
+
+C --> A
+A --> Q
+Q --> P
+P --> E
+E --> S
+E --> ST
+
+P -.-> M
+E -.-> T
+</pre></div>
+      </article>
+    </main>
+    <footer class="container footer"><span>Architecture docs</span><div><a href="../README.md">README</a><a href="../LICENSE">License</a></div></footer>
+    <script src="assets/js/main.js"></script>
+    <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: true,
+  securityLevel: 'loose',
+  theme: 'base',
+  themeVariables: {
+    background: '#0f172a',
+    primaryColor: '#1e293b',
+    primaryBorderColor: '#60a5fa',
+    primaryTextColor: '#e5e7eb',
+    lineColor: '#94a3b8',
+    clusterBkg: '#020617',
+    clusterBorder: '#334155',
+    fontFamily: 'Inter, Arial, sans-serif'
+  },
+  flowchart: {
+    nodeSpacing: 40,
+    rankSpacing: 70,
+    curve: 'basis'
+  }
+});
+</script>
+  </body>
+</html>

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trama | Examples</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+  <body>
+    <header class="topbar"><div class="container topbar-row"><a class="brand" href="index.html">Trama</a><nav class="nav-links"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="community.html">Community</a></nav><div class="actions"><a class="btn ghost" href="../scripts/saga_demo/README.md">Demo Scripts</a></div></div></header>
+    <main class="container doc-layout reveal">
+      <aside class="sidebar"><a href="#create" class="active">Create Definition</a><a href="#robust">Robust Definition</a><a href="#stored">Run Stored Definition</a><a href="#inline">Inline Run</a><a href="#template">Template Usage</a><a href="#load">Load Test</a></aside>
+      <article class="content">
+        <h2>Examples</h2>
+
+        <h3 id="create">Create and Store a Definition</h3>
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/definitions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "order-saga",
+    "version": "v1",
+    "failureHandling": {
+      "type": "retry",
+      "maxAttempts": 3,
+      "delayMillis": 500
+    },
+    "steps": [
+      {
+        "name": "reserve-inventory",
+        "up": {
+          "url": "http://inventory/reserve",
+          "verb": "POST",
+          "body": {
+            "orderId": "{{payload.orderId}}"
+          }
+        },
+        "down": {
+          "url": "http://inventory/release",
+          "verb": "POST",
+          "body": {
+            "orderId": "{{payload.orderId}}"
+          }
+        }
+      }
+    ]
+  }'</code></pre></div>
+
+        <h3 id="robust">Robust Definition Using All Main Fields</h3>
+        <p>This sample covers: <code>backoff</code>, multi-step flow, headers, body templates, explicit <code>successStatusCodes</code>, and success/failure callbacks.</p>
+        <div class="codeblock"><pre><code>{
+  "name": "order-fulfillment",
+  "version": "v2",
+  "failureHandling": {
+    "type": "backoff",
+    "maxAttempts": 5,
+    "initialDelayMillis": 200,
+    "maxDelayMillis": 5000,
+    "multiplier": 2.0,
+    "jitterRatio": 0.2
+  },
+  "steps": [
+    {
+      "name": "reserve-inventory",
+      "up": {
+        "url": "http://inventory/api/v1/reservations",
+        "verb": "POST",
+        "headers": {
+          "X-Correlation-Id": "{{payload.correlationId}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "orderId": "{{payload.orderId}}",
+          "items": "{{payload.items}}"
+        },
+        "successStatusCodes": [200, 201, 202]
+      },
+      "down": {
+        "url": "http://inventory/api/v1/reservations/{{step.0.up.body.reservationId}}/cancel",
+        "verb": "POST",
+        "headers": {
+          "X-Correlation-Id": "{{payload.correlationId}}"
+        },
+        "body": {
+          "reason": "compensation"
+        },
+        "successStatusCodes": [200, 204]
+      }
+    },
+    {
+      "name": "charge-payment",
+      "up": {
+        "url": "http://payments/api/v1/charges",
+        "verb": "POST",
+        "headers": {
+          "Authorization": "Bearer {{payload.paymentToken}}",
+          "X-Correlation-Id": "{{payload.correlationId}}"
+        },
+        "body": {
+          "orderId": "{{payload.orderId}}",
+          "amount": "{{payload.amount}}",
+          "reservationId": "{{step.0.up.body.reservationId}}"
+        },
+        "successStatusCodes": [200, 201]
+      },
+      "down": {
+        "url": "http://payments/api/v1/charges/{{step.1.up.body.chargeId}}/refund",
+        "verb": "POST",
+        "headers": {
+          "Authorization": "Bearer {{payload.paymentToken}}",
+          "X-Correlation-Id": "{{payload.correlationId}}"
+        },
+        "body": {
+          "orderId": "{{payload.orderId}}",
+          "reason": "compensation"
+        },
+        "successStatusCodes": [200, 202]
+      }
+    }
+  ],
+  "onSuccessCallback": {
+    "url": "http://notifications/api/v1/order-success",
+    "verb": "POST",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "orderId": "{{payload.orderId}}",
+      "chargeId": "{{step.1.up.body.chargeId}}"
+    },
+    "successStatusCodes": [200, 202, 204]
+  },
+  "onFailureCallback": {
+    "url": "http://notifications/api/v1/order-failed",
+    "verb": "POST",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "orderId": "{{payload.orderId}}",
+      "message": "saga failed or compensated"
+    },
+    "successStatusCodes": [200, 202, 204]
+  }
+}</code></pre></div>
+
+        <h3 id="stored">Run Stored Definition</h3>
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/definitions/order-saga/v1/run \
+  -H 'Content-Type: application/json' \
+  -d '{"payload": {"orderId": "ord-123", "amount": 99.5}}'</code></pre></div>
+
+        <h3 id="inline">Run Inline Definition</h3>
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/run \
+  -H 'Content-Type: application/json' \
+  -d '{"definition": {"name":"inline","version":"v1","failureHandling":{"type":"retry","maxAttempts":1,"delayMillis":200},"steps":[...]},"payload":{}}'</code></pre></div>
+
+        <h3 id="template">Template Example</h3>
+        <div class="codeblock"><pre><code>{
+  "url": "http://service/charge?reservation={{step.0.up.body.id}}",
+  "verb": "POST",
+  "body": {
+    "amount": "{{payload.amount}}"
+  }
+}</code></pre></div>
+
+        <h3 id="load">Load & Demo Scripts</h3>
+        <ul>
+          <li><code>scripts/saga_demo/run_saga.py</code></li>
+          <li><code>scripts/saga_demo/locust_square_chain_run.py</code></li>
+          <li><code>scripts/saga_demo/README.md</code></li>
+        </ul>
+      </article>
+    </main>
+    <footer class="container footer"><span>Examples docs</span><div><a href="../scripts/saga_demo/README.md">Demo README</a></div></footer>
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>

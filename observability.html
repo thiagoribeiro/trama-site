@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trama | Observability</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+  <body>
+    <header class="topbar"><div class="container topbar-row"><a class="brand" href="index.html">Trama</a><nav class="nav-links"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="community.html">Community</a></nav><div class="actions"><a class="btn" href="../grafana/trama-saga-dashboard.json">Grafana JSON</a></div></div></header>
+    <main class="container doc-layout reveal">
+      <aside class="sidebar">
+        <a href="#metrics" class="active">Metrics</a>
+        <a href="#labels">Labels</a>
+        <a href="#grafana">Grafana</a>
+        <a href="#alerts">Alerts</a>
+        <a href="#tracing">Tracing</a>
+      </aside>
+      <article class="content">
+        <h2>Observability</h2>
+
+        <h3 id="metrics">Metrics Catalog</h3>
+        <table>
+          <thead><tr><th>Metric</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>saga_enqueue_total</code></td><td>Counter</td><td>Queue ingress</td></tr>
+            <tr><td><code>saga_dequeue_total</code></td><td>Counter</td><td>Queue claims</td></tr>
+            <tr><td><code>saga_processed_total</code></td><td>Counter</td><td>Processed outcomes</td></tr>
+            <tr><td><code>saga_failed_total</code></td><td>Counter</td><td>Failures by reason</td></tr>
+            <tr><td><code>saga_retried_total</code></td><td>Counter</td><td>Retry scheduling rate</td></tr>
+            <tr><td><code>saga_rate_limited_total</code></td><td>Counter</td><td>Rate-limited executions</td></tr>
+            <tr><td><code>saga_duration_seconds</code></td><td>Histogram</td><td>End-to-end duration</td></tr>
+            <tr><td><code>saga_step_duration_success_seconds</code></td><td>Histogram</td><td>Successful step duration</td></tr>
+          </tbody>
+        </table>
+
+        <h3 id="labels">Definition-Level Labels</h3>
+        <ul>
+          <li><code>saga_name</code>, <code>saga_version</code> on counters and histograms.</li>
+          <li><code>phase</code> on queue and processing counters.</li>
+          <li><code>outcome</code> on processed, <code>reason</code> on failed counters.</li>
+        </ul>
+
+        <h3 id="grafana">Grafana Dashboard</h3>
+        <p>Import <a href="../grafana/trama-saga-dashboard.json"><code>grafana/trama-saga-dashboard.json</code></a>.</p>
+        
+        <h3 id="alerts">Suggested Alerts</h3>
+        <ul>
+          <li>Failure ratio above threshold per definition.</li>
+          <li>p95 saga duration SLO breach.</li>
+          <li>Sustained enqueue/dequeue imbalance.</li>
+          <li>Unexpected rate-limit growth.</li>
+        </ul>
+
+        <h3 id="tracing">Tracing</h3>
+        <p>OpenTelemetry spans cover request handling and saga processing when telemetry is enabled.</p>
+      </article>
+    </main>
+    <footer class="container footer"><span>Observability docs</span><div><a href="../grafana/trama-saga-dashboard.json">Grafana JSON</a></div></footer>
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>

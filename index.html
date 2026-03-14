@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trama | Open Source Saga Orchestrator</title>
+    <meta name="description" content="Trama is an open source saga orchestrator for distributed workflows with retries, compensation, persistence, metrics, and tracing." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container topbar-row">
+        <a class="brand" href="index.html">Trama</a>
+        <nav class="nav-links">
+          <a data-nav href="index.html">Home</a>
+          <a data-nav href="architecture.html">Architecture</a>
+          <a data-nav href="install.html">Install</a>
+          <a data-nav href="configuration.html">Configuration</a>
+          <a data-nav href="production.html">Production</a>
+          <a data-nav href="api.html">API</a>
+          <a data-nav href="observability.html">Observability</a>
+          <a data-nav href="examples.html">Examples</a>
+          <a data-nav href="community.html">Community</a>
+        </nav>
+        <div class="actions">
+          <a class="btn ghost" href="../openapi.json">OpenAPI</a>
+          <a class="btn" href="https://github.com/thiagoribeiro/trama">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container reveal">
+      <section class="hero">
+        <p class="kicker">Open Source Workflow Coordination</p>
+        <h1>Trama Saga Orchestrator</h1>
+        <p class="lead">
+          Coordinate multi-service workflows with retries and compensation. Trama provides a simple HTTP API,
+          persistent execution tracking, and operational visibility out of the box.
+        </p>
+        <div class="actions" style="margin-top: 1rem; display: flex;">
+          <a class="btn" href="install.html">Get Started</a>
+          <a class="btn ghost" href="../README.md">Read README</a>
+          <a class="btn ghost" href="../openapi.json">OpenAPI</a>
+        </div>
+
+        <div class="hero-grid">
+          <div class="panel">
+            <h3>Why teams use Trama</h3>
+            <ul>
+              <li>Versioned saga definitions and runtime execution API.</li>
+              <li>Retry/backoff policies plus compensation workflows.</li>
+              <li>Execution persistence for auditing and diagnostics.</li>
+              <li>Metrics + tracing for production operations.</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <h3>Technology Stack</h3>
+            <div class="badges">
+              <span>Kotlin</span><span>Ktor</span><span>Postgres</span><span>Redis</span>
+              <span>Prometheus</span><span>OpenTelemetry</span><span>Docker</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Project Highlights</h2>
+        <div class="grid-3">
+          <article class="card">
+            <h3>API-First</h3>
+            <p>Integrate through stable JSON APIs and the OpenAPI contract.</p>
+          </article>
+          <article class="card">
+            <h3>Failure-Resilient</h3>
+            <p>Automatic retries, failure tracking, and compensation handling.</p>
+          </article>
+          <article class="card">
+            <h3>Production-Oriented</h3>
+            <p>Prometheus metrics, Grafana dashboards, and trace correlation support.</p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>What’s Next</h2>
+        <div class="grid-3">
+          <article class="card"><h3>Understand the internals</h3><p><a href="architecture.html">Architecture guide</a></p></article>
+          <article class="card"><h3>Run locally in minutes</h3><p><a href="install.html">Install guide</a></p></article>
+          <article class="card"><h3>Operate in production</h3><p><a href="production.html">Production guide</a></p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="container footer">
+      <span>Apache-2.0 Licensed</span>
+      <div>
+        <a href="../README.md">README</a>
+        <a href="../openapi.json">OpenAPI</a>
+        <a href="../grafana/trama-saga-dashboard.json">Grafana JSON</a>
+        <a href="../LICENSE">License</a>
+      </div>
+    </footer>
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trama | API</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+  <body>
+    <header class="topbar"><div class="container topbar-row"><a class="brand" href="index.html">Trama</a><nav class="nav-links"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="community.html">Community</a></nav><div class="actions"><a class="btn" href="../openapi.json">OpenAPI JSON</a></div></div></header>
+    <main class="container doc-layout reveal">
+      <aside class="sidebar">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#endpoints">Endpoints</a>
+        <a href="#endpoint-details">Endpoint Details</a>
+        <a href="#schemas">Schema Fields</a>
+        <a href="#examples">Examples</a>
+        <a href="#errors">Errors</a>
+      </aside>
+      <article class="content">
+        <h2 id="overview">API</h2>
+        <p>Contract source of truth: <a href="../openapi.json"><code>openapi.json</code></a>.</p>
+
+        <h3 id="endpoints">Endpoints</h3>
+        <p class="muted">Filter endpoints:</p>
+        <input id="endpointFilter" type="search" placeholder="sagas, definitions, retry..." />
+        <table id="apiTable" style="margin-top:0.7rem;">
+          <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><span class="method get">GET</span></td><td><code>/healthz</code></td><td>Liveness probe</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/readyz</code></td><td>Readiness probe</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/sagas/definitions</code></td><td>Create definition</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/sagas/definitions</code></td><td>List definitions</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/sagas/definitions/{id}</code></td><td>Get definition</td></tr>
+            <tr><td><span class="method put">PUT</span></td><td><code>/sagas/definitions/{id}</code></td><td>Insert definition by id</td></tr>
+            <tr><td><span class="method delete">DELETE</span></td><td><code>/sagas/definitions/{id}</code></td><td>Delete definition</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/sagas/definitions/{name}/{version}/run</code></td><td>Run stored definition</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/sagas/run</code></td><td>Run inline definition</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/sagas/{id}</code></td><td>Get execution status</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/sagas/{id}/retry</code></td><td>Retry failed execution</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/metrics</code></td><td>Prometheus metrics</td></tr>
+          </tbody>
+        </table>
+
+        <h3 id="endpoint-details">Endpoint Details (from OpenAPI)</h3>
+        <p class="muted">Rendered live from <code>openapi.json</code>, including request/response schema references.</p>
+        <div id="openapiEndpointDetails" class="api-grid"></div>
+
+        <h3 id="schemas">Schema Fields (from OpenAPI)</h3>
+        <p class="muted">Field-level reference for request and response objects used by this API.</p>
+        <div id="openapiSchemaDocs"></div>
+
+        <h3 id="examples">Examples</h3>
+        <div class="codeblock"><pre id="run-inline"><code>curl -X POST http://localhost:8080/sagas/run \
+  -H 'Content-Type: application/json' \
+  -d '{"definition": { ... }, "payload": {"orderId": "123"}}'</code></pre></div>
+        <button class="btn ghost" data-copy="#run-inline">Copy</button>
+
+        <h3 id="errors">Error Model</h3>
+        <p>Validation and operational errors are returned as:</p>
+        <div class="codeblock"><pre><code>{ "errors": ["message"] }</code></pre></div>
+      </article>
+    </main>
+    <footer class="container footer"><span>API docs</span><div><a href="../openapi.json">OpenAPI</a></div></footer>
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>

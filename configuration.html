@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trama | Configuration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+  <body>
+    <header class="topbar"><div class="container topbar-row"><a class="brand" href="index.html">Trama</a><nav class="nav-links"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="community.html">Community</a></nav><div class="actions"><a class="btn ghost" href="../src/main/resources/application.yaml">application.yaml</a></div></div></header>
+    <main class="container doc-layout reveal">
+      <aside class="sidebar">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#core">Core Keys</a>
+        <a href="#env">Environment Overrides</a>
+        <a href="#profiles">Config Profiles</a>
+      </aside>
+      <article class="content">
+        <h2 id="overview">Configuration</h2>
+        <p>Defaults live in <code>src/main/resources/application.yaml</code>. Hoplite loads resource and environment sources.</p>
+
+        <h3 id="core">Core Keys</h3>
+        <table>
+          <thead><tr><th>Key</th><th>Default</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>runtime.enabled</code></td><td><code>true</code></td><td>Enable workers.</td></tr>
+            <tr><td><code>runtime.workerCount</code></td><td><code>4</code></td><td>Worker concurrency.</td></tr>
+            <tr><td><code>runtime.maxStepsPerExecution</code></td><td><code>25</code></td><td>Checkpoint cadence.</td></tr>
+            <tr><td><code>runtime.store</code></td><td><code>REDIS</code></td><td>Execution storage backend.</td></tr>
+            <tr><td><code>redis.consumer.batchSize</code></td><td><code>50</code></td><td>Queue claim batch.</td></tr>
+            <tr><td><code>redis.consumer.processingTimeoutMillis</code></td><td><code>60000</code></td><td>In-flight lease timeout.</td></tr>
+            <tr><td><code>rateLimit.maxFailures</code></td><td><code>5</code></td><td>Block threshold.</td></tr>
+            <tr><td><code>metrics.enabled</code></td><td><code>true</code></td><td>Enable metrics endpoint.</td></tr>
+            <tr><td><code>telemetry.enabled</code></td><td><code>false</code></td><td>Enable OTEL exporter.</td></tr>
+          </tbody>
+        </table>
+
+        <h3 id="env">Environment Overrides</h3>
+        <p>Supported overrides include:</p>
+        <div class="codeblock"><pre><code>RUNTIME_ENABLED
+METRICS_ENABLED
+TELEMETRY_ENABLED
+REDIS_URL
+DATABASE_HOST
+DATABASE_PORT
+DATABASE_DATABASE
+DATABASE_USER
+DATABASE_PASSWORD</code></pre></div>
+
+        <h3 id="profiles">Profiles</h3>
+        <h4>Dev profile</h4>
+        <div class="codeblock"><pre><code>runtime:
+  workerCount: 2
+  emptyPollDelayMillis: 100
+metrics:
+  enabled: true
+telemetry:
+  enabled: false</code></pre></div>
+
+        <h4>Prod profile (split API and Workers)</h4>
+        <p>In production, run API pods separately from worker pods. API instances should not process queue jobs.</p>
+
+        <h4>API deployment profile</h4>
+        <div class="codeblock"><pre><code>runtime:
+  enabled: false
+metrics:
+  enabled: true
+telemetry:
+  enabled: true
+database:
+  pool:
+    maxPoolSize: 20</code></pre></div>
+
+        <h4>Worker deployment profile</h4>
+        <div class="codeblock"><pre><code>runtime:
+  enabled: true
+  workerCount: 8
+  bufferSize: 500
+  maxStepsPerExecution: 25
+redis:
+  consumer:
+    batchSize: 100
+    processingTimeoutMillis: 60000
+rateLimit:
+  enabled: true
+metrics:
+  enabled: true
+telemetry:
+  enabled: true</code></pre></div>
+
+        <p>Scale workers horizontally by running multiple worker deployments/replicas with this same worker profile.</p>
+      </article>
+    </main>
+    <footer class="container footer"><span>Configuration docs</span><div><a href="../README.md">README</a></div></footer>
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>

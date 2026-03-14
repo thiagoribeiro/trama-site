@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trama | Install</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+  <body>
+    <header class="topbar"><div class="container topbar-row"><a class="brand" href="index.html">Trama</a><nav class="nav-links"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="community.html">Community</a></nav><div class="actions"><a class="btn" href="../README.md">README</a></div></div></header>
+    <main class="container doc-layout reveal">
+      <aside class="sidebar">
+        <a href="#prereq" class="active">Prerequisites</a>
+        <a href="#docker">Docker</a>
+        <a href="#local">Local Run</a>
+        <a href="#verify">Verification</a>
+      </aside>
+      <article class="content">
+        <h2>Install</h2>
+        <h3 id="prereq">Prerequisites</h3>
+        <ul>
+          <li>JDK 21</li>
+          <li>Postgres</li>
+          <li>Redis</li>
+          <li>Docker (optional, easiest path)</li>
+        </ul>
+
+        <h3 id="docker">Quick Start with Docker</h3>
+        <div class="codeblock"><pre><code>docker compose up --build</code></pre></div>
+        <p>API should be reachable at <code>http://localhost:8080</code>.</p>
+
+        <h3 id="local">Run Locally</h3>
+        <div class="codeblock"><pre><code>./gradlew run</code></pre></div>
+        <p>Use <code>src/main/resources/application.yaml</code> or env vars to configure dependencies.</p>
+
+        <h3 id="verify">Verification Checklist</h3>
+        <div class="codeblock"><pre><code>curl http://localhost:8080/healthz
+curl http://localhost:8080/readyz
+curl http://localhost:8080/metrics</code></pre></div>
+      </article>
+    </main>
+    <footer class="container footer"><span>Install docs</span><div><a href="../README.md">README</a></div></footer>
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>

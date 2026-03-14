@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trama | Production</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+  <body>
+    <header class="topbar"><div class="container topbar-row"><a class="brand" href="index.html">Trama</a><nav class="nav-links"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="community.html">Community</a></nav><div class="actions"><a class="btn" href="observability.html">Observability</a></div></div></header>
+    <main class="container doc-layout reveal">
+      <aside class="sidebar">
+        <a href="#baseline" class="active">Baseline</a>
+        <a href="#scaling">Scaling</a>
+        <a href="#resilience">Resilience</a>
+        <a href="#security">Security</a>
+        <a href="#operations">Operations</a>
+      </aside>
+      <article class="content">
+        <h2>Production Readiness</h2>
+
+        <h3 id="baseline">Baseline Configuration</h3>
+        <ul>
+          <li>Enable metrics and tracing.</li>
+          <li>Use Postgres with tuned pool size.</li>
+          <li>Set worker count according to CPU and downstream limits.</li>
+          <li>Configure Redis with replication and proper memory policy.</li>
+        </ul>
+
+        <h3 id="scaling">Scaling Guidelines</h3>
+        <ul>
+          <li>Scale horizontally by adding runtime instances.</li>
+          <li>Tune <code>runtime.workerCount</code> and queue batch size together.</li>
+          <li>Track enqueue/dequeue and p95 saga latency as primary signals.</li>
+        </ul>
+
+        <h3 id="resilience">Resilience Playbook</h3>
+        <ul>
+          <li>Alert on failure ratio and queue pressure.</li>
+          <li>Use retry endpoint for recoverable failed executions.</li>
+          <li>Keep clear runbooks for Redis/Postgres outages.</li>
+        </ul>
+
+        <h3 id="security">Security Checklist</h3>
+        <ul>
+          <li>Use TLS for ingress and internal service calls.</li>
+          <li>Store credentials in secret manager, not plain env in CI logs.</li>
+          <li>Restrict network access to Redis/Postgres.</li>
+          <li>Harden callback endpoints with authentication/authorization.</li>
+        </ul>
+
+        <h3 id="operations">Operational Checklist</h3>
+        <table>
+          <thead><tr><th>Area</th><th>Check</th></tr></thead>
+          <tbody>
+            <tr><td>Availability</td><td><code>/healthz</code> and <code>/readyz</code> monitored.</td></tr>
+            <tr><td>Latency</td><td><code>saga_duration_seconds</code> p95 tracked per definition.</td></tr>
+            <tr><td>Failures</td><td><code>saga_failed_total</code> alert with reason dimension.</td></tr>
+            <tr><td>Queue</td><td><code>saga_enqueue_total</code> vs <code>saga_dequeue_total</code>.</td></tr>
+            <tr><td>Tracing</td><td>OTEL exporter healthy and sampled correctly.</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </main>
+    <footer class="container footer"><span>Production docs</span><div><a href="../grafana/trama-saga-dashboard.json">Grafana Dashboard</a></div></footer>
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>
