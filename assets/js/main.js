@@ -6,6 +6,34 @@
     }
   });
 
+  document.querySelectorAll(".topbar-row").forEach((row) => {
+    const toggle = row.querySelector(".topbar-menu-toggle");
+    if (!toggle) return;
+
+    const setOpen = (open) => {
+      row.classList.toggle("nav-open", open);
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    };
+
+    toggle.addEventListener("click", () => {
+      setOpen(!row.classList.contains("nav-open"));
+    });
+
+    row.querySelectorAll(".nav-links a, .actions a").forEach((link) => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth <= 980) {
+          setOpen(false);
+        }
+      });
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 980) {
+        setOpen(false);
+      }
+    });
+  });
+
   const filter = document.getElementById("endpointFilter");
   const table = document.getElementById("apiTable");
   if (filter && table) {
@@ -43,7 +71,7 @@
 
 async function renderOpenApiDocs(endpointHost, schemaHost) {
   try {
-    const res = await fetch("../openapi.json", { cache: "no-store" });
+    const res = await fetch("https://raw.githubusercontent.com/thiagoribeiro/trama/main/openapi.json", { cache: "no-store" });
     if (!res.ok) {
       throw new Error(`Failed to load openapi.json (${res.status})`);
     }

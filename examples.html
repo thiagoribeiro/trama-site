@@ -1,19 +1,59 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Trama | Examples</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Saga Orchestration Examples and Templates | Trama</title>
+    <meta name="description" content="Explore Trama examples for stored definitions, inline runs, retries, compensation flows, payload templating, and load testing the saga orchestrator." />
+    <link rel="canonical" href="https://trama.run/examples.html" />
+    <meta property="og:title" content="Saga Orchestration Examples and Templates | Trama" />
+    <meta property="og:description" content="Explore Trama examples for stored definitions, inline runs, retries, compensation flows, payload templating, and load testing the saga orchestrator." />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://trama.run/examples.html" />
+    <meta property="og:site_name" content="Trama" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Saga Orchestration Examples and Templates | Trama" />
+    <meta name="twitter:description" content="Explore Trama examples for stored definitions, inline runs, retries, compensation flows, payload templating, and load testing the saga orchestrator." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="assets/css/main.css" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EVMDJ83T7E"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-EVMDJ83T7E");
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Saga Orchestration Examples and Templates",
+        "description": "Explore Trama examples for stored definitions, inline runs, retries, compensation flows, payload templating, and load testing the saga orchestrator.",
+        "url": "https://trama.run/examples.html",
+        "mainEntityOfPage": "https://trama.run/examples.html",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Trama",
+          "url": "https://trama.run/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Trama",
+          "url": "https://trama.run/",
+          "codeRepository": "https://github.com/thiagoribeiro/trama"
+        }
+      }
+    </script>
   </head>
   <body>
-    <header class="topbar"><div class="container topbar-row"><a class="brand" href="index.html">Trama</a><nav class="nav-links"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="community.html">Community</a></nav><div class="actions"><a class="btn ghost" href="../scripts/saga_demo/README.md">Demo Scripts</a></div></div></header>
+    <header class="topbar"><div class="container topbar-row"><a class="brand" href="index.html">Trama</a><button class="topbar-menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation"><span></span><span></span><span></span></button><nav class="nav-links" id="site-nav"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="community.html">Community</a></nav><div class="actions"><a class="btn ghost" href="https://github.com/thiagoribeiro/trama/blob/main/scripts/saga_demo/README.md">Demo Scripts</a></div></div></header>
     <main class="container doc-layout reveal">
       <aside class="sidebar"><a href="#create" class="active">Create Definition</a><a href="#robust">Robust Definition</a><a href="#stored">Run Stored Definition</a><a href="#inline">Inline Run</a><a href="#template">Template Usage</a><a href="#load">Load Test</a></aside>
       <article class="content">
-        <h2>Examples</h2>
+        <h1>Examples</h1>
+        <p>Use these Trama examples to build saga definitions, run workflows inline or from stored versions, and test retries, compensation, and payload templating. Continue into the <a href="api.html">API reference</a> or <a href="install.html">install guide</a> to run the samples locally.</p>
 
         <h3 id="create">Create and Store a Definition</h3>
         <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/definitions \
@@ -172,7 +212,7 @@
         </ul>
       </article>
     </main>
-    <footer class="container footer"><span>Examples docs</span><div><a href="../scripts/saga_demo/README.md">Demo README</a></div></footer>
+    <footer class="container footer"><span>Examples docs</span><div><a href="https://github.com/thiagoribeiro/trama/blob/main/scripts/saga_demo/README.md">Demo README</a></div></footer>
     <script src="assets/js/main.js"></script>
   </body>
 </html>

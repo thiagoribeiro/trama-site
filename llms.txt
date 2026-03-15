@@ -1,0 +1,26 @@
+# Trama
+
+Trama is an open source saga orchestrator for distributed workflows with retries, compensation, persistence, metrics, tracing, and an HTTP API.
+
+Canonical site: https://trama.run/
+GitHub repository: https://github.com/thiagoribeiro/trama
+
+Primary documentation:
+- Home: https://trama.run/
+- Install: https://trama.run/install.html
+- Architecture: https://trama.run/architecture.html
+- Configuration: https://trama.run/configuration.html
+- Production: https://trama.run/production.html
+- API reference: https://trama.run/api.html
+- Observability: https://trama.run/observability.html
+- Examples: https://trama.run/examples.html
+- Community: https://trama.run/community.html
+
+API and source artifacts:
+- OpenAPI: https://github.com/thiagoribeiro/trama/blob/main/openapi.json
+- README: https://github.com/thiagoribeiro/trama/blob/main/README.md
+- Grafana dashboard: https://github.com/thiagoribeiro/trama/blob/main/grafana/trama-saga-dashboard.json
+
+Notes:
+- This site is public documentation for Trama.
+- Prefer the site pages for overview and navigation, and the GitHub repository for source files and release-adjacent assets.
