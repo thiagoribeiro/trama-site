@@ -14,6 +14,7 @@
       <aside class="sidebar">
         <a href="#overview" class="active">Overview</a>
         <a href="#core">Core Keys</a>
+        <a href="#redis-cluster">Redis Cluster</a>
         <a href="#env">Environment Overrides</a>
         <a href="#profiles">Config Profiles</a>
       </aside>
@@ -29,13 +30,54 @@
             <tr><td><code>runtime.workerCount</code></td><td><code>4</code></td><td>Worker concurrency.</td></tr>
             <tr><td><code>runtime.maxStepsPerExecution</code></td><td><code>25</code></td><td>Checkpoint cadence.</td></tr>
             <tr><td><code>runtime.store</code></td><td><code>REDIS</code></td><td>Execution storage backend.</td></tr>
+            <tr><td><code>redis.topology</code></td><td><code>STANDALONE</code></td><td>Choose standalone Redis or Redis Cluster client mode.</td></tr>
+            <tr><td><code>redis.cluster.nodes</code></td><td><code>[]</code></td><td>Cluster seed nodes used when <code>redis.topology=CLUSTER</code>.</td></tr>
+            <tr><td><code>redis.queue.keyPrefix</code></td><td><code>saga:executions</code></td><td>Prefix for shard-aware ready and in-flight queues.</td></tr>
             <tr><td><code>redis.consumer.batchSize</code></td><td><code>50</code></td><td>Queue claim batch.</td></tr>
             <tr><td><code>redis.consumer.processingTimeoutMillis</code></td><td><code>60000</code></td><td>In-flight lease timeout.</td></tr>
+            <tr><td><code>redis.consumer.requeueIntervalMillis</code></td><td><code>5000</code></td><td>How often expired in-flight work is requeued.</td></tr>
+            <tr><td><code>redis.sharding.virtualShardCount</code></td><td><code>1024</code></td><td>Virtual shard fan-out used by rendezvous allocation.</td></tr>
+            <tr><td><code>redis.sharding.membershipKey</code></td><td><code>saga:runtime:pods</code></td><td>Redis ZSET used for worker membership.</td></tr>
+            <tr><td><code>redis.sharding.membershipTtlMillis</code></td><td><code>10000</code></td><td>Worker membership expiration window.</td></tr>
+            <tr><td><code>redis.sharding.heartbeatIntervalMillis</code></td><td><code>3000</code></td><td>How often each worker refreshes its membership entry.</td></tr>
+            <tr><td><code>redis.sharding.refreshIntervalMillis</code></td><td><code>2000</code></td><td>How often each worker recalculates shard ownership.</td></tr>
+            <tr><td><code>redis.sharding.claimerCount</code></td><td><code>4</code></td><td>Parallel shard claimers per worker process.</td></tr>
             <tr><td><code>rateLimit.maxFailures</code></td><td><code>5</code></td><td>Block threshold.</td></tr>
             <tr><td><code>metrics.enabled</code></td><td><code>true</code></td><td>Enable metrics endpoint.</td></tr>
             <tr><td><code>telemetry.enabled</code></td><td><code>false</code></td><td>Enable OTEL exporter.</td></tr>
           </tbody>
         </table>
+
+        <h3 id="redis-cluster">Redis Cluster</h3>
+        <p>Trama now supports Redis Cluster-aware queue sharding. Ready/in-flight keys, execution metadata, and rate-limit keys are written with hash tags so multi-key Lua operations stay inside one Redis slot.</p>
+        <ul>
+          <li>Use <code>redis.topology: CLUSTER</code> to enable the Lettuce cluster client.</li>
+          <li>Set <code>redis.cluster.nodes</code> to one or more reachable cluster seed nodes.</li>
+          <li>Keep the same <code>redis.queue.keyPrefix</code> on every worker pod.</li>
+          <li>Give each worker process a unique <code>redis.sharding.podId</code> so rendezvous ownership is stable.</li>
+          <li>Tune <code>redis.sharding.virtualShardCount</code> and <code>redis.sharding.claimerCount</code> together when scaling out.</li>
+        </ul>
+        <div class="codeblock"><pre><code>redis:
+  topology: "CLUSTER"
+  cluster:
+    nodes:
+      - "redis://redis-cluster-0.redis:6379"
+      - "redis://redis-cluster-1.redis:6379"
+      - "redis://redis-cluster-2.redis:6379"
+  queue:
+    keyPrefix: "saga:executions"
+  consumer:
+    batchSize: 100
+    processingTimeoutMillis: 60000
+    requeueIntervalMillis: 5000
+  sharding:
+    podId: "${HOSTNAME}"
+    virtualShardCount: 1024
+    membershipKey: "saga:runtime:pods"
+    membershipTtlMillis: 10000
+    heartbeatIntervalMillis: 3000
+    refreshIntervalMillis: 2000
+    claimerCount: 4</code></pre></div>
 
         <h3 id="env">Environment Overrides</h3>
         <p>Supported overrides include:</p>
@@ -43,6 +85,8 @@
 METRICS_ENABLED
 TELEMETRY_ENABLED
 REDIS_URL
+REDIS_TOPOLOGY
+REDIS_CLUSTER_NODES
 DATABASE_HOST
 DATABASE_PORT
 DATABASE_DATABASE
@@ -85,6 +129,35 @@ redis:
     processingTimeoutMillis: 60000
 rateLimit:
   enabled: true
+metrics:
+  enabled: true
+telemetry:
+  enabled: true</code></pre></div>
+
+        <h4>Worker deployment profile with Redis Cluster</h4>
+        <div class="codeblock"><pre><code>runtime:
+  enabled: true
+  workerCount: 8
+  bufferSize: 500
+redis:
+  topology: "CLUSTER"
+  cluster:
+    nodes:
+      - "redis://redis-cluster-0.redis:6379"
+      - "redis://redis-cluster-1.redis:6379"
+      - "redis://redis-cluster-2.redis:6379"
+  consumer:
+    batchSize: 100
+    processingTimeoutMillis: 60000
+    requeueIntervalMillis: 5000
+  sharding:
+    podId: "${HOSTNAME}"
+    virtualShardCount: 1024
+    membershipKey: "saga:runtime:pods"
+    membershipTtlMillis: 10000
+    heartbeatIntervalMillis: 3000
+    refreshIntervalMillis: 2000
+    claimerCount: 4
 metrics:
   enabled: true
 telemetry:

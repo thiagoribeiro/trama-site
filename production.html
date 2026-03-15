@@ -13,6 +13,7 @@
     <main class="container doc-layout reveal">
       <aside class="sidebar">
         <a href="#baseline" class="active">Baseline</a>
+        <a href="#redis-cluster">Redis Cluster</a>
         <a href="#scaling">Scaling</a>
         <a href="#resilience">Resilience</a>
         <a href="#security">Security</a>
@@ -27,12 +28,41 @@
           <li>Use Postgres with tuned pool size.</li>
           <li>Set worker count according to CPU and downstream limits.</li>
           <li>Configure Redis with replication and proper memory policy.</li>
+          <li>For larger worker fleets, prefer Redis Cluster plus shard-aware worker polling.</li>
         </ul>
+
+        <h3 id="redis-cluster">Running Redis Cluster in Production</h3>
+        <p>Use Redis Cluster when one global ready queue becomes a hotspot. Trama spreads queue traffic across virtual shards and uses rendezvous hashing so each worker pod only polls the shards it owns.</p>
+        <ul>
+          <li>Set <code>redis.topology</code> to <code>CLUSTER</code> on every worker.</li>
+          <li>Provide at least three seed nodes in <code>redis.cluster.nodes</code>.</li>
+          <li>Use a stable shared <code>redis.queue.keyPrefix</code> and <code>redis.sharding.membershipKey</code> across the fleet.</li>
+          <li>Set <code>redis.sharding.podId</code> to a unique pod identity such as <code>${HOSTNAME}</code>.</li>
+          <li>Keep <code>redis.sharding.membershipTtlMillis</code> comfortably above the heartbeat interval.</li>
+          <li>Scale by adding worker replicas, not by manually partitioning queue keys.</li>
+        </ul>
+        <div class="codeblock"><pre><code>redis:
+  topology: "CLUSTER"
+  cluster:
+    nodes:
+      - "redis://redis-cluster-0.redis:6379"
+      - "redis://redis-cluster-1.redis:6379"
+      - "redis://redis-cluster-2.redis:6379"
+  sharding:
+    podId: "${HOSTNAME}"
+    virtualShardCount: 1024
+    membershipKey: "saga:runtime:pods"
+    membershipTtlMillis: 10000
+    heartbeatIntervalMillis: 3000
+    refreshIntervalMillis: 2000
+    claimerCount: 4</code></pre></div>
+        <p>During shutdown, a worker marks itself as not ready, stops claiming new Redis queue work, unregisters from shard membership, and drains already-claimed executions before closing Redis. That lets another worker take ownership without abandoning in-flight items.</p>
 
         <h3 id="scaling">Scaling Guidelines</h3>
         <ul>
           <li>Scale horizontally by adding runtime instances.</li>
           <li>Tune <code>runtime.workerCount</code> and queue batch size together.</li>
+          <li>When running Redis Cluster, tune <code>redis.sharding.virtualShardCount</code> and <code>redis.sharding.claimerCount</code> with replica count.</li>
           <li>Track enqueue/dequeue and p95 saga latency as primary signals.</li>
         </ul>
 
@@ -41,6 +71,7 @@
           <li>Alert on failure ratio and queue pressure.</li>
           <li>Use retry endpoint for recoverable failed executions.</li>
           <li>Keep clear runbooks for Redis/Postgres outages.</li>
+          <li>Document what happens when Redis membership becomes stale or a worker loses shard ownership.</li>
         </ul>
 
         <h3 id="security">Security Checklist</h3>
@@ -59,6 +90,7 @@
             <tr><td>Latency</td><td><code>saga_duration_seconds</code> p95 tracked per definition.</td></tr>
             <tr><td>Failures</td><td><code>saga_failed_total</code> alert with reason dimension.</td></tr>
             <tr><td>Queue</td><td><code>saga_enqueue_total</code> vs <code>saga_dequeue_total</code>.</td></tr>
+            <tr><td>Redis Cluster</td><td><code>saga_redis_active_pods</code>, <code>saga_redis_owned_shards</code>, and <code>saga_redis_membership_refresh_age_ms</code> tracked.</td></tr>
             <tr><td>Tracing</td><td>OTEL exporter healthy and sampled correctly.</td></tr>
           </tbody>
         </table>

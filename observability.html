@@ -31,16 +31,22 @@
             <tr><td><code>saga_failed_total</code></td><td>Counter</td><td>Failures by reason</td></tr>
             <tr><td><code>saga_retried_total</code></td><td>Counter</td><td>Retry scheduling rate</td></tr>
             <tr><td><code>saga_rate_limited_total</code></td><td>Counter</td><td>Rate-limited executions</td></tr>
+            <tr><td><code>saga_redis_claim_scans_total</code></td><td>Counter</td><td>Redis shard claim scans performed by queue claimers.</td></tr>
+            <tr><td><code>saga_redis_active_pods</code></td><td>Gauge</td><td>Healthy worker pods seen in Redis membership.</td></tr>
+            <tr><td><code>saga_redis_owned_shards</code></td><td>Gauge</td><td>Virtual shards currently assigned to this worker.</td></tr>
+            <tr><td><code>saga_redis_membership_refresh_age_ms</code></td><td>Gauge</td><td>Age of the last successful membership refresh.</td></tr>
             <tr><td><code>saga_duration_seconds</code></td><td>Histogram</td><td>End-to-end duration</td></tr>
             <tr><td><code>saga_step_duration_success_seconds</code></td><td>Histogram</td><td>Successful step duration</td></tr>
           </tbody>
         </table>
+        <p>The Redis cluster rollout adds worker-coordination metrics so you can observe shard ownership, claim pressure, and membership freshness without inspecting Redis directly.</p>
 
         <h3 id="labels">Definition-Level Labels</h3>
         <ul>
           <li><code>saga_name</code>, <code>saga_version</code> on counters and histograms.</li>
           <li><code>phase</code> on queue and processing counters.</li>
           <li><code>outcome</code> on processed, <code>reason</code> on failed counters.</li>
+          <li>Redis membership gauges are process-level metrics and do not add definition labels.</li>
         </ul>
 
         <h3 id="grafana">Grafana Dashboard</h3>
@@ -52,6 +58,9 @@
           <li>p95 saga duration SLO breach.</li>
           <li>Sustained enqueue/dequeue imbalance.</li>
           <li>Unexpected rate-limit growth.</li>
+          <li><code>saga_redis_membership_refresh_age_ms</code> above membership TTL.</li>
+          <li><code>saga_redis_active_pods</code> dropping unexpectedly during rollout.</li>
+          <li><code>saga_redis_owned_shards</code> equal to <code>0</code> on a worker pod that should be active.</li>
         </ul>
 
         <h3 id="tracing">Tracing</h3>
