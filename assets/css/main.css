@@ -229,7 +229,7 @@ h1 {
 }
 
 section {
-  margin-top: 1.4rem;
+  margin-top: 2.1rem;
 }
 
 section h2 {
@@ -318,6 +318,19 @@ section h2 {
   gap: 0.9rem;
 }
 
+.narrative-copy {
+  max-width: 62ch;
+}
+
+.plain-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.8rem 0 0;
+  color: var(--text);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.9rem;
+}
+
 .step-list {
   display: grid;
   gap: 0.8rem;
@@ -334,6 +347,42 @@ section h2 {
 .step-item strong {
   display: inline-block;
   margin-bottom: 0.35rem;
+}
+
+.execution-state {
+  border: 1px solid rgba(54, 209, 184, 0.25);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  background: rgba(10, 26, 35, 0.86);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.execution-state-title {
+  margin: 0 0 0.65rem;
+  color: #cdeff0;
+  font-size: 0.86rem;
+}
+
+.execution-state ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.execution-state li {
+  display: flex;
+  gap: 0.55rem;
+  align-items: baseline;
+  margin-bottom: 0.35rem;
+  color: var(--text);
+}
+
+.execution-ok {
+  color: #7ef0be;
+}
+
+.execution-pending {
+  color: var(--primary-2);
 }
 
 .use-case-card {
@@ -406,6 +455,22 @@ section h2 {
 .next-step span {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.comparison-table {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: linear-gradient(165deg, rgba(16, 34, 52, 0.92), rgba(10, 21, 34, 0.92));
+}
+
+.comparison-table th {
+  background: rgba(120, 178, 222, 0.1);
+}
+
+.comparison-table .is-trama {
+  background: rgba(54, 209, 184, 0.08);
 }
 
 .doc-layout {
