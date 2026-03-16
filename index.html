@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simple Saga Orchestration for Microservices | Trama</title>
-    <meta name="description" content="Trama is a lightweight saga orchestrator for distributed microservices workflows with retries, compensation, persistence, observability, and an API-first developer experience." />
+    <title>Saga Orchestration Without Workflow Platform Overhead | Trama</title>
+    <meta name="description" content="Trama is a minimal saga orchestration runtime for distributed workflows across microservices using HTTP APIs, retries, compensation, state tracking, and execution visibility." />
     <link rel="canonical" href="https://trama.run/" />
-    <meta property="og:title" content="Simple Saga Orchestration for Microservices | Trama" />
-    <meta property="og:description" content="Trama is a lightweight saga orchestrator for distributed microservices workflows with retries, compensation, persistence, observability, and an API-first developer experience." />
+    <meta property="og:title" content="Saga Orchestration Without Workflow Platform Overhead | Trama" />
+    <meta property="og:description" content="Trama is a minimal saga orchestration runtime for distributed workflows across microservices using HTTP APIs, retries, compensation, state tracking, and execution visibility." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://trama.run/" />
     <meta property="og:site_name" content="Trama" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Simple Saga Orchestration for Microservices | Trama" />
-    <meta name="twitter:description" content="Trama is a lightweight saga orchestrator for distributed microservices workflows with retries, compensation, persistence, observability, and an API-first developer experience." />
+    <meta name="twitter:title" content="Saga Orchestration Without Workflow Platform Overhead | Trama" />
+    <meta name="twitter:description" content="Trama is a minimal saga orchestration runtime for distributed workflows across microservices using HTTP APIs, retries, compensation, state tracking, and execution visibility." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
@@ -33,7 +33,7 @@
             "@type": "WebSite",
             "name": "Trama",
             "url": "https://trama.run/",
-            "description": "Trama is a lightweight saga orchestrator for distributed microservices workflows with retries, compensation, persistence, observability, and an API-first developer experience."
+            "description": "Trama is a minimal saga orchestration runtime for distributed workflows across microservices using HTTP APIs, retries, compensation, state tracking, and execution visibility."
           },
           {
             "@type": "SoftwareApplication",
@@ -44,7 +44,7 @@
             "license": "https://github.com/thiagoribeiro/trama/blob/main/LICENSE",
             "codeRepository": "https://github.com/thiagoribeiro/trama",
             "url": "https://trama.run/",
-            "description": "Lightweight saga orchestrator for distributed microservices workflows with retries, compensation, persistence, observability, and an API-first developer experience."
+            "description": "Minimal saga orchestration runtime for distributed workflows across microservices using HTTP APIs, retries, compensation, state tracking, and execution visibility."
           }
         ]
       }
@@ -79,62 +79,51 @@
 
     <main class="container reveal">
       <section class="hero">
-        <p class="kicker">Lightweight Saga Orchestration</p>
-        <h1>Trama</h1>
-        <p class="hero-subtitle">Simple Saga Orchestration for Microservices</p>
-        <p class="lead">
-          Coordinate distributed workflows with retries, compensation, persistence, and observability.
-          Without complex workflow engines.
-        </p>
+        <p class="kicker">Minimal Saga Runtime</p>
+        <h1>Saga orchestration without workflow platform overhead.</h1>
+        <p class="hero-subtitle">Trama is a minimal runtime for coordinating distributed workflows across microservices using HTTP APIs.</p>
+        <p class="lead">It executes saga steps, stores execution state, handles retries and compensation, and exposes execution visibility without requiring a full workflow engine.</p>
         <div class="actions hero-actions">
           <a class="btn" href="install.html">Get Started</a>
           <a class="btn ghost" href="https://github.com/thiagoribeiro/trama">View on GitHub</a>
-          <a class="btn ghost" href="api.html">Documentation</a>
         </div>
+        <div style="margin-top: 0.65rem;">
+          <a href="api.html" class="muted">Read the Docs</a>
+        </div>
+      </section>
 
-        <div class="hero-grid">
-          <div class="panel">
-            <p class="section-kicker">Why Teams Choose Trama</p>
-            <h3>Built for developers who want orchestration without platform sprawl.</h3>
-            <ul class="checklist">
-              <li>Run multi-step workflows through an HTTP API instead of scattering saga logic across services.</li>
-              <li>Handle retries, compensation, and execution state in one consistent runtime.</li>
-              <li>Operate with metrics, tracing, and queue-backed workers from day one.</li>
-            </ul>
-          </div>
-          <div class="panel">
-            <p class="section-kicker">Proof Points</p>
-            <h3>Queue-native and production-oriented.</h3>
-            <div class="badges">
-              <span>Kotlin</span><span>Ktor</span><span>Postgres</span><span>Redis</span>
-              <span>Prometheus</span><span>OpenTelemetry</span><span>Docker</span>
+      <section>
+        <p class="section-kicker">Why Trama Exists</p>
+        <h2>Coordination logic should not be spread across every service.</h2>
+        <div class="grid-2">
+          <article class="card">
+            <p>Distributed business workflows often span inventory, payments, shipping, and notifications. When one step fails, the system must retry safely or undo earlier actions.</p>
+            <div class="plain-list">
+              <span>inventory</span>
+              <span>payments</span>
+              <span>shipping</span>
+              <span>notifications</span>
             </div>
-            <ul class="checklist">
-              <li>API-first workflow execution</li>
-              <li>Persistent saga tracking</li>
-              <li>Operational visibility out of the box</li>
-            </ul>
-          </div>
+          </article>
+          <article class="card">
+            <p>Without orchestration, retry logic, compensation flows, and state tracking become scattered across services. Trama centralizes this execution logic while keeping service implementations focused on local work.</p>
+          </article>
         </div>
       </section>
 
       <section>
         <p class="section-kicker">Problem</p>
-        <h2>Distributed transactions are hard.</h2>
+        <h2>Distributed workflows fail in messy ways</h2>
         <div class="grid-2">
           <article class="card">
-            <p>
-              Microservices break traditional database transactions. When inventory, payments, shipping,
-              notifications, or provisioning must move together, every service boundary creates another chance
-              for partial failure.
-            </p>
+            <p>In microservice architectures, a single business operation often spans several services. Inventory may succeed while payment times out, and shipping might begin before a failure becomes visible.</p>
+            <p>These partial failures make distributed workflows difficult to reason about. The Saga pattern addresses this by coordinating local transactions and triggering compensating actions when failures occur.</p>
           </article>
           <article class="card">
             <ul class="checklist">
-              <li>Partial failures leave systems in inconsistent states.</li>
-              <li>Retries and compensation logic get duplicated across teams.</li>
-              <li>Workflow coordination becomes hard to test and reason about.</li>
-              <li>Operational visibility is weak when orchestration is spread everywhere.</li>
+              <li>Inconsistent rollback behavior across services</li>
+              <li>Retry logic duplicated across application boundaries</li>
+              <li>Lack of visibility into execution state</li>
             </ul>
           </article>
         </div>
@@ -142,35 +131,27 @@
 
       <section>
         <p class="section-kicker">Solution</p>
-        <h2>Trama coordinates distributed workflows.</h2>
+        <h2>Trama gives sagas a runtime</h2>
         <div class="grid-2">
           <article class="panel">
-            <p>
-              Trama is a lightweight saga orchestrator that manages multi-step workflows across services.
-              It gives application teams one place to define how a workflow runs, retries, compensates, persists,
-              and exposes operational signals.
-            </p>
-            <p class="muted">
-              You keep the flexibility of service-based systems without adopting a heavier workflow platform.
-            </p>
+            <p>Trama executes distributed workflows through a persistent runtime. A client submits a workflow request, and Trama stores execution state, schedules step processing, manages retries, and triggers compensation when necessary.</p>
+            <p>Workers process steps asynchronously while Trama maintains a durable record of the full execution. This separates workflow coordination from service implementation.</p>
           </article>
-          <article class="panel">
-            <div class="badges">
-              <span>Retries</span><span>Compensation</span><span>Persistence</span>
-              <span>Metrics</span><span>Tracing</span><span>HTTP API</span>
-            </div>
-            <ul class="checklist">
-              <li>Define workflows centrally.</li>
-              <li>Track every execution end to end.</li>
-              <li>Retry or compensate when downstream calls fail.</li>
+          <article class="execution-state">
+            <p class="execution-state-title">Workflow state</p>
+            <ul>
+              <li><span class="execution-ok">✓</span><span>Inventory reserved</span></li>
+              <li><span class="execution-ok">✓</span><span>Payment charged</span></li>
+              <li><span class="execution-pending">⏳</span><span>Shipment creation in progress</span></li>
             </ul>
+            <p class="muted">Trama keeps track of which steps already succeeded and which one is currently running, so retries or compensation can happen from a known state.</p>
           </article>
         </div>
       </section>
 
       <section>
-        <p class="section-kicker">Real Example</p>
-        <h2>Run a workflow with one API request.</h2>
+        <p class="section-kicker">Example</p>
+        <h2>One request defines the workflow and starts execution.</h2>
         <div class="grid-2">
           <article class="card">
             <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/run \
@@ -216,24 +197,29 @@
   }'</code></pre></div>
           </article>
           <article class="panel">
-            <h3>What this proves</h3>
+            <h3>What happens after this request</h3>
             <div class="step-list">
               <div class="step-item">
-                <strong>Define the workflow once</strong>
-                <div class="muted">Describe steps, retry policy, and compensation behavior in a single request payload.</div>
+                <strong>1. Persist execution</strong>
+                <div class="muted">Trama stores the workflow execution before workers begin processing.</div>
               </div>
               <div class="step-item">
-                <strong>Run through the HTTP API</strong>
-                <div class="muted">Trigger orchestration without embedding workflow logic into every application service.</div>
+                <strong>2. Process queued steps</strong>
+                <div class="muted">Step workers consume tasks from the queue and execute the workflow asynchronously.</div>
               </div>
               <div class="step-item">
-                <strong>Observe and recover</strong>
-                <div class="muted">Track execution state, inspect failures, and retry workflows through the Trama API.</div>
+                <strong>3. Handle failures centrally</strong>
+                <div class="muted">Failures trigger retry or compensation depending on configuration.</div>
+              </div>
+              <div class="step-item">
+                <strong>4. Inspect state later</strong>
+                <div class="muted">Execution history remains inspectable through the API and metrics.</div>
               </div>
             </div>
+            <p class="muted">This demonstrates that Trama is not just an HTTP wrapper. It provides a persistent orchestration runtime.</p>
             <div class="actions" style="margin-top: 1rem;">
               <a class="btn" href="api.html">View API</a>
-              <a class="btn ghost" href="examples.html">See More Examples</a>
+              <a class="btn ghost" href="examples.html">Explore Examples</a>
             </div>
           </article>
         </div>
@@ -241,167 +227,117 @@
 
       <section>
         <p class="section-kicker">Architecture</p>
-        <h2>Simple flow, clear operational model.</h2>
+        <h2>Runtime model</h2>
         <div class="grid-2">
           <article class="card">
             <div class="arch-flow">
               <span class="arch-node">Client</span><span class="arch-arrow">→</span>
-              <span class="arch-node">HTTP API</span><span class="arch-arrow">→</span>
+              <span class="arch-node">Trama HTTP API</span><span class="arch-arrow">→</span>
+              <span class="arch-node">Execution Store</span><span class="arch-arrow">→</span>
               <span class="arch-node">Queue</span><span class="arch-arrow">→</span>
               <span class="arch-node">Workers</span><span class="arch-arrow">→</span>
-              <span class="arch-node">Services</span>
+              <span class="arch-node">Services</span><span class="arch-arrow">→</span>
+              <span class="arch-node">Termination notice</span>
             </div>
-            <p>
-              Trama receives a workflow request, persists execution state, pushes work to queue-backed workers,
-              and tracks success, retries, or compensation as the saga runs.
-            </p>
           </article>
           <article class="card">
-            <ul class="checklist">
-              <li>Incoming requests become durable workflow executions.</li>
-              <li>Workers claim ready jobs and process steps asynchronously.</li>
-              <li>Retries and compensation are part of the runtime, not hand-coded everywhere.</li>
-              <li>Metrics and traces expose what happened during each run.</li>
-            </ul>
+            <p>Trama separates orchestration from execution. The API receives workflow requests and stores execution state before work is handed to step workers.</p>
+            <p>Workers process queued steps while Trama manages retry logic, compensation, and progress tracking.</p>
             <p><a href="architecture.html">Explore the full architecture guide</a></p>
           </article>
         </div>
       </section>
 
       <section>
-        <p class="section-kicker">Features</p>
-        <h2>Designed for reliable microservices workflows.</h2>
-        <div class="grid-3">
+        <p class="section-kicker">Capabilities</p>
+        <h2>Core capabilities</h2>
+        <div class="grid-2">
           <article class="card feature-card">
-            <h3>Reliable Execution</h3>
-            <p>Define workflows once and run them consistently with queue-backed workers and persistent execution tracking.</p>
+            <h3>Execution Runtime</h3>
+            <p>Durable workflow execution with step scheduling and progress tracking.</p>
           </article>
           <article class="card feature-card">
-            <h3>Compensation Support</h3>
-            <p>Attach rollback behavior to each step so Trama can unwind workflows when downstream services fail.</p>
+            <h3>Failure Handling</h3>
+            <p>Retries, backoff policies, and compensating actions are managed centrally.</p>
           </article>
           <article class="card feature-card">
-            <h3>Persistence and Visibility</h3>
-            <p>Keep execution state available for auditing, troubleshooting, and operational recovery.</p>
+            <h3>Operational Visibility</h3>
+            <p>Execution state can be inspected through APIs, metrics, and traces.</p>
           </article>
           <article class="card feature-card">
-            <h3>Queue-Native Runtime</h3>
-            <p>Process workflows asynchronously without requiring a heavyweight external workflow engine.</p>
-          </article>
-          <article class="card feature-card">
-            <h3>API-First Integration</h3>
-            <p>Use HTTP and OpenAPI as the integration contract for applications, automation, and platform tooling.</p>
-          </article>
-          <article class="card feature-card">
-            <h3>Production Observability</h3>
-            <p>Measure health with Prometheus metrics, Grafana dashboards, and OpenTelemetry traces.</p>
+            <h3>HTTP Integration</h3>
+            <p>Workflows are triggered and managed using JSON APIs without SDK lock-in.</p>
           </article>
         </div>
       </section>
 
       <section>
         <p class="section-kicker">Comparison</p>
-        <h2>Positioned between hand-rolled orchestration and heavyweight workflow platforms.</h2>
-        <div class="grid-3">
-          <article class="comparison-card">
-            <span class="comparison-label">Hand-Rolled</span>
-            <h3>Custom saga logic in every service</h3>
-            <ul class="checklist">
-              <li>Lowest upfront tooling cost</li>
-              <li>Highest duplication of retries and compensation</li>
-              <li>Poor cross-workflow visibility</li>
-            </ul>
-          </article>
-          <article class="comparison-card highlight">
-            <span class="comparison-label">Trama</span>
-            <h3>Focused orchestration with clear operational boundaries</h3>
-            <ul class="checklist">
-              <li>Simple setup for microservices workflows</li>
-              <li>Built-in retries, compensation, persistence, and observability</li>
-              <li>Best fit for teams that want orchestration without workflow-platform overhead</li>
-            </ul>
-          </article>
-          <article class="comparison-card">
-            <span class="comparison-label">Heavy Engines</span>
-            <h3>Broad workflow platforms</h3>
-            <ul class="checklist">
-              <li>More features and deeper platform scope</li>
-              <li>Higher operational and adoption complexity</li>
-              <li>Best fit when workflow management becomes a platform in itself</li>
-            </ul>
-          </article>
-        </div>
-      </section>
-
-      <section>
-        <p class="section-kicker">Quick Start</p>
-        <h2>Go from zero to a running orchestrator fast.</h2>
-        <div class="grid-2">
-          <article class="card">
-            <div class="step-list">
-              <div class="step-item">
-                <strong>1. Start the stack</strong>
-                <div class="muted">Bring up Trama with Docker and the supporting services.</div>
-              </div>
-              <div class="step-item">
-                <strong>2. Verify readiness</strong>
-                <div class="muted">Check health, readiness, and metrics before sending workflows.</div>
-              </div>
-              <div class="step-item">
-                <strong>3. Run a first saga</strong>
-                <div class="muted">Use the API and examples to create, run, and inspect a real workflow.</div>
-              </div>
-            </div>
-          </article>
-          <article class="card">
-            <div class="codeblock"><pre><code>docker compose up --build
-
-curl http://localhost:8080/healthz
-curl http://localhost:8080/readyz
-curl http://localhost:8080/metrics</code></pre></div>
-            <div class="actions" style="margin-top: 1rem;">
-              <a class="btn" href="install.html">Install Guide</a>
-              <a class="btn ghost" href="api.html">API Docs</a>
-              <a class="btn ghost" href="examples.html">Examples</a>
-            </div>
-          </article>
-        </div>
+        <h2>Most teams do not need a workflow platform.</h2>
+        <p class="narrative-copy">There are three common approaches to distributed workflows.</p>
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Approach</th>
+              <th>How it works</th>
+              <th>Tradeoff</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Hand-rolled orchestration</strong></td>
+              <td>Workflow logic spread across services with inconsistent retry and rollback behavior.</td>
+              <td>Fast to start, difficult to maintain as workflows grow.</td>
+            </tr>
+            <tr class="is-trama">
+              <td><strong>Trama</strong></td>
+              <td>Focused runtime for distributed workflows executed through a simple API.</td>
+              <td>Centralizes saga coordination without turning workflow management into a platform project.</td>
+            </tr>
+            <tr>
+              <td><strong>Heavy workflow engines</strong></td>
+              <td>Powerful orchestration platforms designed for complex workflow management and platform-level automation.</td>
+              <td>Broader capabilities, but more operational and adoption overhead.</td>
+            </tr>
+          </tbody>
+        </table>
       </section>
 
       <section>
         <p class="section-kicker">Use Cases</p>
-        <h2>When Trama fits best.</h2>
-        <div class="grid-2">
+        <h2>Typical use cases</h2>
+        <div class="grid-3">
           <article class="card use-case-card">
-            <h3>Order Fulfillment</h3>
-            <p>Coordinate inventory reservation, payment capture, and shipment creation with retries and compensation across services.</p>
+            <h3>Order processing</h3>
+            <div class="plain-list">
+              <span>reserve inventory</span>
+              <span>charge payment</span>
+              <span>create shipment</span>
+            </div>
           </article>
           <article class="card use-case-card">
-            <h3>Payment and Inventory Workflows</h3>
-            <p>Centralize business transactions that must succeed or roll back together without pushing orchestration into every service.</p>
+            <h3>Financial workflows</h3>
+            <div class="plain-list">
+              <span>authorize transaction</span>
+              <span>execute settlement</span>
+              <span>record ledger entry</span>
+            </div>
           </article>
           <article class="card use-case-card">
-            <h3>Provisioning Flows</h3>
-            <p>Orchestrate account setup, entitlement assignment, notifications, and cleanup in multi-system provisioning sequences.</p>
-          </article>
-          <article class="card use-case-card">
-            <h3>Cross-Service Business Transactions</h3>
-            <p>Give backend teams one workflow runtime for business processes that span many HTTP-based services.</p>
+            <h3>Operational pipelines</h3>
+            <p>Multi-service data processing flows that need retries, compensation, and inspectable execution state.</p>
           </article>
         </div>
       </section>
 
       <section class="cta-band">
-        <p class="section-kicker">Community</p>
-        <h2>Use it, evaluate it, contribute to it.</h2>
-        <p>
-          Trama is open source and built for teams that want a practical orchestration layer for microservices.
-          Explore the repository, read the docs, try the examples, or contribute runtime and observability improvements.
-        </p>
+        <p class="section-kicker">Closing</p>
+        <h2>Stop hand-rolling saga orchestration.</h2>
+        <p>Run Trama locally and execute a real workflow. Inspect the execution state, simulate failures, and evaluate the runtime behavior directly.</p>
         <div class="actions" style="margin-top: 1rem;">
-          <a class="btn" href="https://github.com/thiagoribeiro/trama">GitHub</a>
-          <a class="btn ghost" href="community.html">Community</a>
-          <a class="btn ghost" href="examples.html">Examples</a>
+          <a class="btn" href="install.html">Get Started</a>
+          <a class="btn ghost" href="examples.html">Explore Examples</a>
+          <a class="btn ghost" href="https://github.com/thiagoribeiro/trama">GitHub</a>
         </div>
       </section>
     </main>
