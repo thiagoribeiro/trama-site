@@ -58,8 +58,23 @@
         <a href="#profiles">Config Profiles</a>
       </aside>
       <article class="content">
-        <h1 id="overview">Configuration</h1>
-        <p>Review the Trama configuration surface for workers, Redis topology, queue sharding, telemetry, and deployment profiles. Use this reference alongside the <a href="install.html">install guide</a> and <a href="production.html">production guide</a> when preparing an environment.</p>
+        <div class="page-intro">
+          <h1 id="overview">Configuration</h1>
+          <p>Review the Trama configuration surface for workers, Redis topology, queue sharding, telemetry, and deployment profiles. Start with local defaults, then move into worker scaling and Redis Cluster settings when preparing production environments.</p>
+          <div class="page-meta">
+            <span>Reference page</span>
+            <span>Operators and platform teams</span>
+            <span>Local to production</span>
+          </div>
+          <div class="next-steps">
+            <a class="next-step" href="install.html"><strong>Install</strong><span>Get a local environment running first.</span></a>
+            <a class="next-step" href="production.html"><strong>Production</strong><span>See how these settings shape real deployments.</span></a>
+            <a class="next-step" href="observability.html"><strong>Observability</strong><span>Connect runtime tuning to what you monitor.</span></a>
+          </div>
+        </div>
+
+        <h3>Start here</h3>
+        <p>For local development, focus on runtime enablement, Redis/Postgres connectivity, and metrics. For production, focus on worker count, Redis topology, queue behavior, telemetry, and shard ownership settings.</p>
 
         <h3 id="core">Core Keys</h3>
         <table>

@@ -51,14 +51,36 @@
     <header class="topbar"><div class="container topbar-row"><a class="brand" href="index.html">Trama</a><button class="topbar-menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation"><span></span><span></span><span></span></button><nav class="nav-links" id="site-nav"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="community.html">Community</a></nav><div class="actions"><a class="btn" href="https://github.com/thiagoribeiro/trama/blob/main/README.md">README</a></div></div></header>
     <main class="container doc-layout reveal">
       <aside class="sidebar">
-        <a href="#prereq" class="active">Prerequisites</a>
-        <a href="#docker">Docker</a>
-        <a href="#local">Local Run</a>
+        <a href="#docker" class="active">Docker</a>
         <a href="#verify">Verification</a>
+        <a href="#prereq">Prerequisites</a>
+        <a href="#local">Local Run</a>
       </aside>
       <article class="content">
-        <h1>Install</h1>
-        <p>Set up Trama for local development with Docker or a JVM-based run, then verify the API, readiness, and metrics endpoints. After installation, continue with the <a href="configuration.html">configuration reference</a> and <a href="api.html">API documentation</a>.</p>
+        <div class="page-intro">
+          <h1>Install</h1>
+          <p>Set up Trama for local development with Docker or a JVM-based run, then verify the API, readiness, and metrics endpoints. This is the fastest path from “what is Trama?” to “I have it running.”</p>
+          <div class="page-meta">
+            <span>Best for first-time users</span>
+            <span>Activation guide</span>
+            <span>Local setup</span>
+          </div>
+          <div class="next-steps">
+            <a class="next-step" href="api.html"><strong>API</strong><span>Send a first workflow request after install.</span></a>
+            <a class="next-step" href="examples.html"><strong>Examples</strong><span>Use sample definitions and inline runs.</span></a>
+            <a class="next-step" href="configuration.html"><strong>Configuration</strong><span>Tune runtime and infrastructure settings.</span></a>
+          </div>
+        </div>
+
+        <h3 id="docker">Quick Start with Docker</h3>
+        <div class="codeblock"><pre><code>docker compose up --build</code></pre></div>
+        <p>API should be reachable at <code>http://localhost:8080</code>. This is the recommended first path for evaluation.</p>
+
+        <h3 id="verify">Verification Checklist</h3>
+        <div class="codeblock"><pre><code>curl http://localhost:8080/healthz
+curl http://localhost:8080/readyz
+curl http://localhost:8080/metrics</code></pre></div>
+
         <h3 id="prereq">Prerequisites</h3>
         <ul>
           <li>JDK 21</li>
@@ -67,18 +89,9 @@
           <li>Docker (optional, easiest path)</li>
         </ul>
 
-        <h3 id="docker">Quick Start with Docker</h3>
-        <div class="codeblock"><pre><code>docker compose up --build</code></pre></div>
-        <p>API should be reachable at <code>http://localhost:8080</code>.</p>
-
         <h3 id="local">Run Locally</h3>
         <div class="codeblock"><pre><code>./gradlew run</code></pre></div>
         <p>Use <code>src/main/resources/application.yaml</code> or env vars to configure dependencies.</p>
-
-        <h3 id="verify">Verification Checklist</h3>
-        <div class="codeblock"><pre><code>curl http://localhost:8080/healthz
-curl http://localhost:8080/readyz
-curl http://localhost:8080/metrics</code></pre></div>
       </article>
     </main>
     <footer class="container footer"><span>Install docs</span><div><a href="https://github.com/thiagoribeiro/trama/blob/main/README.md">README</a></div></footer>

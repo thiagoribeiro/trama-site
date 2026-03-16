@@ -52,8 +52,23 @@
     <main class="container doc-layout reveal">
       <aside class="sidebar"><a href="#create" class="active">Create Definition</a><a href="#robust">Robust Definition</a><a href="#stored">Run Stored Definition</a><a href="#inline">Inline Run</a><a href="#template">Template Usage</a><a href="#load">Load Test</a></aside>
       <article class="content">
-        <h1>Examples</h1>
-        <p>Use these Trama examples to build saga definitions, run workflows inline or from stored versions, and test retries, compensation, and payload templating. Continue into the <a href="api.html">API reference</a> or <a href="install.html">install guide</a> to run the samples locally.</p>
+        <div class="page-intro">
+          <h1>Examples</h1>
+          <p>Use these Trama examples to build saga definitions, run workflows inline or from stored versions, and test retries, compensation, and payload templating. This page is the fastest way to move from understanding Trama to using it.</p>
+          <div class="page-meta">
+            <span>Best for first-time users</span>
+            <span>Hands-on adoption</span>
+            <span>Copy-and-run samples</span>
+          </div>
+          <div class="next-steps">
+            <a class="next-step" href="install.html"><strong>Install</strong><span>Run the stack locally before trying the samples.</span></a>
+            <a class="next-step" href="api.html"><strong>API</strong><span>Cross-check each example against the contract.</span></a>
+            <a class="next-step" href="community.html"><strong>Community</strong><span>Contribute new examples and demo flows.</span></a>
+          </div>
+        </div>
+
+        <h3>Best starting points</h3>
+        <p>If you are new to Trama, start with creating a stored definition, then run the inline example, and finally move to the robust sample with retries, compensation, callbacks, and templates.</p>
 
         <h3 id="create">Create and Store a Definition</h3>
         <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/definitions \

@@ -57,8 +57,23 @@
         <a href="#diagram">Mermaid Diagram</a>
       </aside>
       <article class="content">
-        <h1 id="overview">Architecture</h1>
-        <p>Learn how Trama coordinates distributed workflows through an HTTP API, queue-backed workers, persistent saga state, and production observability. Pair this overview with the <a href="api.html">API reference</a> and <a href="configuration.html">configuration guide</a> when planning a deployment.</p>
+        <div class="page-intro">
+          <h1 id="overview">Architecture</h1>
+          <p>Learn how Trama fits into a microservices architecture and how the runtime coordinates distributed workflows through an HTTP API, queue-backed workers, persistent saga state, and observability.</p>
+          <div class="page-meta">
+            <span>Best for architects</span>
+            <span>Best for backend engineers</span>
+            <span>Conceptual guide</span>
+          </div>
+          <div class="next-steps">
+            <a class="next-step" href="install.html"><strong>Install</strong><span>Run Trama locally before diving deeper.</span></a>
+            <a class="next-step" href="api.html"><strong>API</strong><span>See how workflow definitions and runs are triggered.</span></a>
+            <a class="next-step" href="production.html"><strong>Production</strong><span>Connect the runtime model to deployment concerns.</span></a>
+          </div>
+        </div>
+
+        <h3>Why orchestration exists</h3>
+        <p>In microservices systems, business transactions span multiple services with different failure modes. Trama exists to keep retries, compensation, state tracking, and observability in one orchestration layer instead of scattering that logic across every service boundary.</p>
 
         <h3 id="components">Core Components</h3>
         <div class="arch-flow">

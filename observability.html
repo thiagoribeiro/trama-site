@@ -58,8 +58,23 @@
         <a href="#tracing">Tracing</a>
       </aside>
       <article class="content">
-        <h1>Observability</h1>
-        <p>Track Trama runtime health with Prometheus metrics, Grafana dashboards, and OpenTelemetry traces across queue claims, failures, latency, and Redis shard ownership. This page pairs well with the <a href="production.html">production guide</a> and <a href="api.html">API reference</a>.</p>
+        <div class="page-intro">
+          <h1>Observability</h1>
+          <p>Track Trama runtime health with Prometheus metrics, Grafana dashboards, and OpenTelemetry traces across queue claims, failures, latency, and Redis shard ownership. Use this page when you need to answer “is the orchestrator healthy?” and “where are workflows getting stuck?”</p>
+          <div class="page-meta">
+            <span>Best for SREs</span>
+            <span>Metrics and tracing</span>
+            <span>Production operations</span>
+          </div>
+          <div class="next-steps">
+            <a class="next-step" href="production.html"><strong>Production</strong><span>See where these signals fit into rollout and scaling decisions.</span></a>
+            <a class="next-step" href="configuration.html"><strong>Configuration</strong><span>Enable the telemetry and runtime settings behind the metrics.</span></a>
+            <a class="next-step" href="api.html"><strong>API</strong><span>Map runtime behavior back to workflow requests and retries.</span></a>
+          </div>
+        </div>
+
+        <h3>What you can answer with this data</h3>
+        <p>Use Trama observability to answer whether workflows are flowing through the queue, whether failures are climbing, whether Redis shard ownership is healthy, and whether end-to-end latency is staying within expectations.</p>
 
         <h3 id="metrics">Metrics Catalog</h3>
         <table>
