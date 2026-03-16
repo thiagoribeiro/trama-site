@@ -77,7 +77,29 @@
         <h3>Hello world request</h3>
         <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/run \
   -H 'Content-Type: application/json' \
-  -d '{"definition":{"name":"inline","version":"v1","failureHandling":{"type":"retry","maxAttempts":1,"delayMillis":200},"steps":[{"name":"notify","up":{"url":"http://service/run","verb":"POST"}}]},"payload":{"orderId":"123"}}'</code></pre></div>
+  -d '{
+    "definition": {
+      "name": "inline",
+      "version": "v1",
+      "failureHandling": {
+        "type": "retry",
+        "maxAttempts": 1,
+        "delayMillis": 200
+      },
+      "steps": [
+        {
+          "name": "notify",
+          "up": {
+            "url": "http://service/run",
+            "verb": "POST"
+          }
+        }
+      ]
+    },
+    "payload": {
+      "orderId": "123"
+    }
+  }'</code></pre></div>
 
         <h3 id="endpoints">Endpoints</h3>
         <p class="muted">Filter endpoints:</p>

@@ -62,12 +62,429 @@
     });
   });
 
+  initWalkthrough();
+
   const endpointDetails = document.getElementById("openapiEndpointDetails");
   const schemaDocs = document.getElementById("openapiSchemaDocs");
   if (endpointDetails || schemaDocs) {
     renderOpenApiDocs(endpointDetails, schemaDocs);
   }
 })();
+
+function initWalkthrough() {
+  const root = document.querySelector("[data-walkthrough]");
+  if (!root) return;
+
+  const executionId = "9c7a1f2e-3db0-4e4b-9c5e-2f8b6d5c1a77";
+  const definitionRequest = {
+    name: "order-fulfillment",
+    version: "v1",
+    failureHandling: {
+      type: "retry",
+      maxAttempts: 3,
+      delayMillis: 500
+    },
+    steps: [
+      {
+        name: "reserve-inventory",
+        up: {
+          url: "http://inventory/reserve",
+          verb: "POST",
+          body: {
+            orderId: "{{payload.orderId}}",
+            items: "{{payload.items}}"
+          }
+        },
+        down: {
+          url: "http://inventory/release",
+          verb: "POST",
+          body: {
+            orderId: "{{payload.orderId}}"
+          }
+        }
+      },
+      {
+        name: "charge-payment",
+        up: {
+          url: "http://payment/charge",
+          verb: "POST",
+          body: {
+            orderId: "{{payload.orderId}}",
+            amount: "{{payload.amount}}"
+          }
+        },
+        down: {
+          url: "http://payment/refund",
+          verb: "POST",
+          body: {
+            orderId: "{{payload.orderId}}"
+          }
+        }
+      }
+    ],
+    onFailureCallback: {
+      url: "http://notifications/workflow-failed",
+      verb: "POST",
+      body: {
+        orderId: "{{payload.orderId}}"
+      }
+    }
+  };
+
+  const snapshots = [
+    {
+      tone: "neutral",
+      status: "READY",
+      currentStep: "definition-stored",
+      label: "Request",
+      primary: {
+        type: "http",
+        method: "POST",
+        path: "/sagas/definitions",
+        headers: ["Content-Type: application/json"],
+        body: definitionRequest
+      },
+      logs: ["definition received", "definition validated", "definition stored"],
+      badges: ["persisted", "definition"],
+      timeline: ["active", "idle", "idle", "idle", "idle", "idle", "optional"],
+      activePill: 0
+    },
+    {
+      tone: "neutral",
+      status: "RUNNING",
+      currentStep: "reserve-inventory",
+      label: "Request",
+      primary: {
+        type: "http",
+        method: "POST",
+        path: "/sagas/definitions/order-fulfillment/v1/run",
+        headers: ["Content-Type: application/json"],
+        body: {
+          payload: {
+            orderId: "ORD-123",
+            amount: 250.0,
+            items: [
+              { sku: "ABC", qty: 2 }
+            ]
+          }
+        }
+      },
+      secondary: {
+        label: "Response",
+        type: "json",
+        body: {
+          id: executionId
+        }
+      },
+      logs: ["execution created", "execution persisted", "first step queued"],
+      badges: ["persisted", "queued"],
+      timeline: ["completed", "active", "idle", "idle", "idle", "idle", "optional"],
+      activePill: 1
+    },
+    {
+      tone: "success",
+      status: "RUNNING",
+      currentStep: "charge-payment",
+      label: "Runtime block",
+      primary: {
+        type: "json",
+        body: {
+          step: "reserve-inventory",
+          request: {
+            url: "http://inventory/reserve",
+            verb: "POST",
+            body: {
+              orderId: "ORD-123",
+              items: [
+                { sku: "ABC", qty: 2 }
+              ]
+            }
+          },
+          response: {
+            reservationId: "resv-987",
+            status: "reserved"
+          },
+          result: "success"
+        }
+      },
+      logs: ["reserve-inventory queued", "reserve-inventory started", "reserve-inventory completed"],
+      badges: ["success", "persisted"],
+      timeline: ["completed", "completed", "active", "idle", "idle", "idle", "optional"],
+      activePill: 2
+    },
+    {
+      tone: "failure",
+      status: "RUNNING",
+      currentStep: "reserve-inventory:down",
+      label: "Runtime block",
+      primary: {
+        type: "json",
+        body: {
+          step: "charge-payment",
+          request: {
+            url: "http://payment/charge",
+            verb: "POST",
+            body: {
+              orderId: "ORD-123",
+              amount: 250.0
+            }
+          },
+          response: {
+            code: "PAYMENT_TIMEOUT",
+            message: "gateway timeout"
+          },
+          result: "failure"
+        }
+      },
+      logs: ["charge-payment queued", "charge-payment started", "charge-payment failed", "compensation scheduled"],
+      badges: ["failed", "retry-policy", "compensation"],
+      timeline: ["completed", "completed", "completed", "active", "idle", "idle", "optional"],
+      activePill: 3
+    },
+    {
+      tone: "compensation",
+      status: "RUNNING",
+      currentStep: "finalizing-failure",
+      label: "Runtime block",
+      primary: {
+        type: "json",
+        body: {
+          step: "reserve-inventory",
+          compensation: {
+            url: "http://inventory/release",
+            verb: "POST",
+            body: {
+              orderId: "ORD-123"
+            }
+          },
+          response: {
+            status: "released"
+          },
+          result: "compensated"
+        }
+      },
+      logs: [
+        "reserve-inventory compensation queued",
+        "reserve-inventory compensation started",
+        "reserve-inventory compensation completed"
+      ],
+      badges: ["compensated", "rollback"],
+      timeline: ["completed", "completed", "completed", "failed", "active", "idle", "optional"],
+      activePill: 4
+    },
+    {
+      tone: "api",
+      status: "FAILED",
+      currentStep: "none",
+      label: "Request",
+      primary: {
+        type: "http",
+        method: "GET",
+        path: `/sagas/${executionId}`
+      },
+      secondary: {
+        label: "Response",
+        type: "json",
+        body: {
+          id: executionId,
+          name: "order-fulfillment",
+          version: "v1",
+          status: "FAILED",
+          startedAt: "2026-03-16T14:10:00Z",
+          updatedAt: "2026-03-16T14:10:06Z"
+        }
+      },
+      logs: ["execution marked failed", "state persisted", "status available via API"],
+      badges: ["failed", "persisted", "inspectable"],
+      timeline: ["completed", "completed", "completed", "failed", "compensated", "active", "optional"],
+      activePill: 5
+    },
+    {
+      tone: "api",
+      status: "FAILED",
+      currentStep: "callback-complete",
+      label: "Runtime block",
+      primary: {
+        type: "json",
+        body: {
+          callback: "onFailureCallback",
+          request: {
+            url: "http://notifications/workflow-failed",
+            verb: "POST",
+            body: {
+              orderId: "ORD-123"
+            }
+          },
+          response: {
+            status: "accepted"
+          },
+          result: "success"
+        }
+      },
+      logs: ["onFailureCallback queued", "onFailureCallback sent", "failure notification accepted"],
+      badges: ["callback", "optional"],
+      timeline: ["completed", "completed", "completed", "failed", "compensated", "completed", "active"],
+      activePill: 6
+    }
+  ];
+
+  const pillLabels = [
+    "stored definition",
+    "run request",
+    "step success",
+    "step failure",
+    "compensation",
+    "final status",
+    "callback"
+  ];
+
+  const steps = Array.from(root.querySelectorAll("[data-walkthrough-step]"));
+  const panel = root.querySelector("[data-walkthrough-panel]");
+  const pills = root.querySelector("[data-walkthrough-pills]");
+  const execution = root.querySelector("[data-walkthrough-execution]");
+  const status = root.querySelector("[data-walkthrough-status]");
+  const statusWrap = root.querySelector("[data-walkthrough-status-wrap]");
+  const currentStep = root.querySelector("[data-walkthrough-current-step]");
+  const label = root.querySelector("[data-walkthrough-label]");
+  const code = root.querySelector("[data-walkthrough-code]");
+  const secondary = root.querySelector("[data-walkthrough-secondary]");
+  const secondaryLabel = root.querySelector("[data-walkthrough-secondary-label]");
+  const secondaryCode = root.querySelector("[data-walkthrough-secondary-code]");
+  const log = root.querySelector("[data-walkthrough-log]");
+  const badges = root.querySelector("[data-walkthrough-badges]");
+  const prev = root.querySelector("[data-walkthrough-prev]");
+  const replay = root.querySelector("[data-walkthrough-replay]");
+  const next = root.querySelector("[data-walkthrough-next]");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  let index = 0;
+  let timer = null;
+  let inView = false;
+  let paused = false;
+
+  pills.innerHTML = pillLabels.map((item, pillIndex) => `
+    <span class="walkthrough-stage-pill${pillIndex === 0 ? " is-active" : ""}">${escapeHtml(item)}</span>
+  `).join("");
+
+  function applySnapshot(nextIndex) {
+    index = nextIndex;
+    const snapshot = snapshots[index];
+
+    steps.forEach((step, stepIndex) => {
+      const stepState = snapshot.timeline[stepIndex];
+      step.dataset.state = stepState;
+      step.querySelector(".walkthrough-step-icon").textContent = timelineIcon(stepState, stepIndex + 1);
+      step.querySelector(".walkthrough-step-state").textContent = stepState;
+    });
+
+    panel.dataset.tone = snapshot.tone;
+    execution.textContent = executionId;
+    status.textContent = snapshot.status;
+    statusWrap.dataset.status = snapshot.status;
+    currentStep.textContent = snapshot.currentStep;
+    label.textContent = snapshot.label;
+    code.innerHTML = renderWalkthroughBlock(snapshot.primary);
+
+    if (snapshot.secondary) {
+      secondary.hidden = false;
+      secondaryLabel.textContent = snapshot.secondary.label;
+      secondaryCode.innerHTML = renderWalkthroughBlock(snapshot.secondary);
+    } else {
+      secondary.hidden = true;
+      secondaryLabel.textContent = "";
+      secondaryCode.innerHTML = "";
+    }
+
+    log.innerHTML = snapshot.logs.map((entry) => `<li>${escapeHtml(entry)}</li>`).join("");
+    badges.innerHTML = snapshot.badges.map((entry) => `<span class="walkthrough-badge">${escapeHtml(entry)}</span>`).join("");
+
+    pills.querySelectorAll(".walkthrough-stage-pill").forEach((pill, pillIndex) => {
+      pill.classList.toggle("is-active", pillIndex === snapshot.activePill);
+    });
+
+    if (!reducedMotion.matches) {
+      panel.classList.remove("is-updating");
+      void panel.offsetWidth;
+      panel.classList.add("is-updating");
+    }
+  }
+
+  function clearPlayback() {
+    if (timer) {
+      window.clearTimeout(timer);
+      timer = null;
+    }
+  }
+
+  function schedulePlayback() {
+    clearPlayback();
+    if (!inView || paused || reducedMotion.matches) return;
+    const delay = index === snapshots.length - 1 ? 3250 : 2600;
+    timer = window.setTimeout(() => {
+      applySnapshot((index + 1) % snapshots.length);
+      schedulePlayback();
+    }, delay);
+  }
+
+  function handleManualNavigation(nextIndex) {
+    applySnapshot((nextIndex + snapshots.length) % snapshots.length);
+    schedulePlayback();
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    const entry = entries[0];
+    inView = Boolean(entry && entry.isIntersecting && entry.intersectionRatio >= 0.35);
+    if (inView) {
+      schedulePlayback();
+    } else {
+      clearPlayback();
+    }
+  }, { threshold: [0, 0.35, 0.6] });
+
+  observer.observe(root);
+
+  root.addEventListener("mouseenter", () => {
+    paused = true;
+    clearPlayback();
+  });
+
+  root.addEventListener("mouseleave", () => {
+    paused = false;
+    schedulePlayback();
+  });
+
+  steps.forEach((step, stepIndex) => {
+    step.addEventListener("click", () => {
+      handleManualNavigation(stepIndex);
+    });
+
+    step.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      handleManualNavigation(stepIndex);
+    });
+  });
+
+  prev.addEventListener("click", () => {
+    handleManualNavigation(index - 1);
+  });
+
+  replay.addEventListener("click", () => {
+    handleManualNavigation(0);
+  });
+
+  next.addEventListener("click", () => {
+    handleManualNavigation(index + 1);
+  });
+
+  if (typeof reducedMotion.addEventListener === "function") {
+    reducedMotion.addEventListener("change", () => {
+      schedulePlayback();
+    });
+  }
+
+  applySnapshot(0);
+}
 
 async function renderOpenApiDocs(endpointHost, schemaHost) {
   try {
@@ -268,6 +685,62 @@ function methodClass(method) {
   if (method === "put" || method === "patch") return "put";
   if (method === "delete") return "delete";
   return "get";
+}
+
+function renderWalkthroughBlock(block) {
+  if (!block) return "";
+  if (block.type === "http") {
+    return renderWalkthroughHttp(block);
+  }
+  if (block.type === "json") {
+    return highlightWalkthroughJson(block.body);
+  }
+  return "";
+}
+
+function renderWalkthroughHttp(block) {
+  const lines = [
+    `<span class="token-method">${escapeHtml(block.method)}</span> <span class="token-path">${escapeHtml(block.path)}</span>`
+  ];
+
+  (block.headers || []).forEach((header) => {
+    lines.push(`<span class="token-header">${escapeHtml(header)}</span>`);
+  });
+
+  if (typeof block.body !== "undefined") {
+    lines.push("");
+    lines.push(highlightWalkthroughJson(block.body));
+  }
+
+  return lines.join("\n");
+}
+
+function highlightWalkthroughJson(value) {
+  const raw = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+  const escaped = escapeHtml(raw);
+  return escaped.replace(
+    /("(\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*"(\s*:)?|-?\d+(?:\.\d+)?(?:[eE][+\-]?\d+)?|\btrue\b|\bfalse\b|\bnull\b)/g,
+    (match) => {
+      let cls = "token-number";
+      if (match.startsWith("\"")) {
+        cls = match.endsWith(":") ? "token-key" : "token-string";
+      } else if (match === "true" || match === "false") {
+        cls = "token-boolean";
+      } else if (match === "null") {
+        cls = "token-null";
+      }
+      return `<span class="${cls}">${match}</span>`;
+    }
+  );
+}
+
+function timelineIcon(state, number) {
+  if (state === "completed") return "✓";
+  if (state === "failed") return "!";
+  if (state === "compensated") return "↺";
+  if (state === "active") return "•";
+  if (state === "optional") return "?";
+  return String(number);
 }
 
 function escapeHtml(value) {
