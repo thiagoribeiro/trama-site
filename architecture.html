@@ -85,20 +85,23 @@
           <span class="arch-node">Services</span>
         </div>
         <ul>
-          <li><code>Application</code>: REST endpoints and runtime bootstrap.</li>
+          <li><code>Application</code>: REST endpoints, callback receiver, and runtime bootstrap.</li>
           <li><code>RuntimeBootstrap</code>: wires queue, consumer, processor, store, and observability.</li>
           <li><code>SagaExecutionProcessor</code>: worker orchestration, ack/retry control, and rate-limit integration.</li>
-          <li><code>DefaultSagaExecutor</code>: step execution, retry policy decisions, compensation transitions.</li>
+          <li><code>WorkflowExecutor</code>: node dispatch, retry policy decisions, compensation transitions. Delegates to <code>TaskNodeHandler</code> (sync and async HTTP) and <code>SwitchNodeHandler</code> (JSON Logic branching).</li>
+          <li><code>CallbackReceiver</code>: validates HMAC-signed callback tokens and re-enqueues async executions to resume.</li>
           <li><code>SagaExecutionStore</code>: persistence abstraction (Redis/Postgres backing).</li>
         </ul>
 
         <h3 id="lifecycle">Execution Lifecycle</h3>
         <ol>
           <li>Definition is validated and stored (or provided inline).</li>
-          <li>Execution request enqueues a saga payload.</li>
+          <li>Execution request enqueues a workflow payload.</li>
           <li>Consumer claims ready messages and hands them to workers.</li>
-          <li>Executor runs steps, persists outcomes, and either:
-            succeeds, fails terminally, or reenqueues for retry/compensation.</li>
+          <li>Executor dispatches each node — sync task nodes make HTTP calls immediately; async task nodes fire a request, pause the execution, and wait for a callback.</li>
+          <li>For async nodes: the external service POSTs to the callback endpoint with a signed token. The callback receiver validates the token and re-enqueues the execution to resume from the next node.</li>
+          <li>Switch nodes evaluate JSON Logic expressions and route to the matching branch without making any HTTP call.</li>
+          <li>On failure, the executor applies the retry or backoff policy, then drives compensation in reverse order if retries are exhausted.</li>
           <li>Metrics and traces are emitted throughout all stages.</li>
         </ol>
 
@@ -119,7 +122,12 @@ direction TB
 
 A[Ktor API]:::api
 
+subgraph Ingress
+direction LR
+CB[Callback Receiver]:::api
 Q[Redis Queue]:::infra
+end
+
 P[Saga Processor]:::runtime
 E[Saga Executor]:::runtime
 ST[Postgres Store]:::infra
@@ -133,10 +141,14 @@ S[External Services]:::external
 
 C --> A
 A --> Q
+A --> CB
+CB --> Q
 Q --> P
 P --> E
 E --> S
 E --> ST
+
+S -->|async callback| A
 
 P -.-> M
 E -.-> T

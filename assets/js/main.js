@@ -77,58 +77,74 @@ function initWalkthrough() {
 
   const executionId = "9c7a1f2e-3db0-4e4b-9c5e-2f8b6d5c1a77";
   const definitionRequest = {
-    name: "order-fulfillment",
+    name: "checkout",
     version: "v1",
     failureHandling: {
       type: "retry",
       maxAttempts: 3,
       delayMillis: 500
     },
-    steps: [
+    entrypoint: "choose-payment",
+    nodes: [
       {
-        name: "reserve-inventory",
-        up: {
-          url: "http://inventory/reserve",
-          verb: "POST",
-          body: {
-            orderId: "{{payload.orderId}}",
-            items: "{{payload.items}}"
+        kind: "switch",
+        id: "choose-payment",
+        cases: [
+          {
+            name: "pix",
+            when: { "==": [{ "var": "payload.paymentMethod" }, "pix"] },
+            target: "pix-payment"
           }
-        },
-        down: {
-          url: "http://inventory/release",
-          verb: "POST",
-          body: {
-            orderId: "{{payload.orderId}}"
-          }
-        }
+        ],
+        default: "card-payment"
       },
       {
-        name: "charge-payment",
-        up: {
-          url: "http://payment/charge",
-          verb: "POST",
-          body: {
-            orderId: "{{payload.orderId}}",
-            amount: "{{payload.amount}}"
+        kind: "task",
+        id: "pix-payment",
+        action: {
+          mode: "async",
+          request: {
+            url: "http://payment/pix/authorize",
+            verb: "POST",
+            body: {
+              orderId: "{{payload.orderId}}",
+              callbackUrl: "{{runtime.callback.url}}",
+              callbackToken: "{{runtime.callback.token}}"
+            }
           }
         },
-        down: {
-          url: "http://payment/refund",
-          verb: "POST",
-          body: {
-            orderId: "{{payload.orderId}}"
+        next: "create-shipment"
+      },
+      {
+        kind: "task",
+        id: "card-payment",
+        action: {
+          mode: "sync",
+          request: {
+            url: "http://payment/card/charge",
+            verb: "POST",
+            body: {
+              orderId: "{{payload.orderId}}"
+            }
+          }
+        },
+        next: "create-shipment"
+      },
+      {
+        kind: "task",
+        id: "create-shipment",
+        action: {
+          mode: "sync",
+          request: {
+            url: "http://shipment/create",
+            verb: "POST",
+            body: {
+              orderId: "{{payload.orderId}}"
+            }
           }
         }
       }
-    ],
-    onFailureCallback: {
-      url: "http://notifications/workflow-failed",
-      verb: "POST",
-      body: {
-        orderId: "{{payload.orderId}}"
-      }
-    }
+    ]
   };
 
   const snapshots = [
@@ -146,26 +162,23 @@ function initWalkthrough() {
       },
       logs: ["definition received", "definition validated", "definition stored"],
       badges: ["persisted", "definition"],
-      timeline: ["active", "idle", "idle", "idle", "idle", "idle", "optional"],
+      timeline: ["active", "idle", "idle", "idle", "idle", "idle", "idle", "idle"],
       activePill: 0
     },
     {
       tone: "neutral",
       status: "RUNNING",
-      currentStep: "reserve-inventory",
+      currentStep: "choose-payment",
       label: "Request",
       primary: {
         type: "http",
         method: "POST",
-        path: "/sagas/definitions/order-fulfillment/v1/run",
+        path: "/sagas/definitions/checkout/v1/run",
         headers: ["Content-Type: application/json"],
         body: {
           payload: {
-            orderId: "ORD-123",
-            amount: 250.0,
-            items: [
-              { sku: "ABC", qty: 2 }
-            ]
+            orderId: "ORD-789",
+            paymentMethod: "pix"
           }
         }
       },
@@ -176,105 +189,135 @@ function initWalkthrough() {
           id: executionId
         }
       },
-      logs: ["execution created", "execution persisted", "first step queued"],
+      logs: ["execution created", "execution persisted", "entrypoint queued"],
       badges: ["persisted", "queued"],
-      timeline: ["completed", "active", "idle", "idle", "idle", "idle", "optional"],
+      timeline: ["completed", "active", "idle", "idle", "idle", "idle", "idle", "idle"],
       activePill: 1
     },
     {
-      tone: "success",
+      tone: "neutral",
       status: "RUNNING",
-      currentStep: "charge-payment",
+      currentStep: "pix-payment",
       label: "Runtime block",
       primary: {
         type: "json",
         body: {
-          step: "reserve-inventory",
-          request: {
-            url: "http://inventory/reserve",
-            verb: "POST",
-            body: {
-              orderId: "ORD-123",
-              items: [
-                { sku: "ABC", qty: 2 }
-              ]
-            }
-          },
-          response: {
-            reservationId: "resv-987",
-            status: "reserved"
-          },
-          result: "success"
+          node: "choose-payment",
+          kind: "switch",
+          expression: { "==": [{ "var": "payload.paymentMethod" }, "pix"] },
+          result: "pix",
+          target: "pix-payment"
         }
       },
-      logs: ["reserve-inventory queued", "reserve-inventory started", "reserve-inventory completed"],
-      badges: ["success", "persisted"],
-      timeline: ["completed", "completed", "active", "idle", "idle", "idle", "optional"],
+      logs: ["switch node dispatched", "expression evaluated", "branch selected: pix", "routing to pix-payment"],
+      badges: ["switch", "branched"],
+      timeline: ["completed", "completed", "active", "idle", "idle", "idle", "idle", "idle"],
       activePill: 2
     },
     {
-      tone: "failure",
+      tone: "neutral",
       status: "RUNNING",
-      currentStep: "reserve-inventory:down",
+      currentStep: "pix-payment",
       label: "Runtime block",
       primary: {
         type: "json",
         body: {
-          step: "charge-payment",
+          node: "pix-payment",
+          kind: "task",
+          mode: "async",
           request: {
-            url: "http://payment/charge",
+            url: "http://payment/pix/authorize",
             verb: "POST",
             body: {
-              orderId: "ORD-123",
-              amount: 250.0
+              orderId: "ORD-789",
+              callbackUrl: "https://trama.internal/callbacks/9c7a1f2e/pix-payment",
+              callbackToken: "eyJhbGciOiJIUzI1NiJ9..."
             }
-          },
-          response: {
-            code: "PAYMENT_TIMEOUT",
-            message: "gateway timeout"
-          },
-          result: "failure"
+          }
         }
       },
-      logs: ["charge-payment queued", "charge-payment started", "charge-payment failed", "compensation scheduled"],
-      badges: ["failed", "retry-policy", "compensation"],
-      timeline: ["completed", "completed", "completed", "active", "idle", "idle", "optional"],
+      logs: ["pix-payment dispatched", "async request sent", "injected callback url and token"],
+      badges: ["async", "dispatched"],
+      timeline: ["completed", "completed", "completed", "active", "idle", "idle", "idle", "idle"],
       activePill: 3
     },
     {
-      tone: "compensation",
+      tone: "neutral",
       status: "RUNNING",
-      currentStep: "finalizing-failure",
+      currentStep: "pix-payment",
       label: "Runtime block",
       primary: {
         type: "json",
         body: {
-          step: "reserve-inventory",
-          compensation: {
-            url: "http://inventory/release",
-            verb: "POST",
-            body: {
-              orderId: "ORD-123"
-            }
-          },
+          node: "pix-payment",
           response: {
-            status: "released"
+            status: 202,
+            body: { message: "processing" }
           },
-          result: "compensated"
+          result: "async-pending",
+          next: "waiting for callback"
         }
       },
-      logs: [
-        "reserve-inventory compensation queued",
-        "reserve-inventory compensation started",
-        "reserve-inventory compensation completed"
-      ],
-      badges: ["compensated", "rollback"],
-      timeline: ["completed", "completed", "completed", "failed", "active", "idle", "optional"],
+      logs: ["202 received", "execution paused", "waiting for callback signal"],
+      badges: ["202", "async-pending", "paused"],
+      timeline: ["completed", "completed", "completed", "completed", "active", "idle", "idle", "idle"],
       activePill: 4
     },
     {
       tone: "api",
-      status: "FAILED",
+      status: "WAITING",
+      currentStep: "pix-payment",
+      label: "Request",
+      primary: {
+        type: "http",
+        method: "GET",
+        path: `/sagas/${executionId}`
+      },
+      secondary: {
+        label: "Response",
+        type: "json",
+        body: {
+          id: executionId,
+          name: "checkout",
+          version: "v1",
+          status: "WAITING",
+          currentStep: "pix-payment"
+        }
+      },
+      logs: ["execution persisted", "status: WAITING", "execution paused on pix-payment"],
+      badges: ["waiting", "inspectable"],
+      timeline: ["completed", "completed", "completed", "completed", "completed", "active", "idle", "idle"],
+      activePill: 5
+    },
+    {
+      tone: "success",
+      status: "RUNNING",
+      currentStep: "create-shipment",
+      label: "Request",
+      primary: {
+        type: "http",
+        method: "POST",
+        path: `/callbacks/${executionId}/pix-payment`,
+        headers: ["Content-Type: application/json"],
+        body: {
+          status: "success"
+        }
+      },
+      secondary: {
+        label: "Response",
+        type: "json",
+        body: {
+          accepted: true
+        }
+      },
+      logs: ["callback received", "token validated", "execution re-enqueued", "resuming from create-shipment"],
+      badges: ["callback", "resumed", "validated"],
+      timeline: ["completed", "completed", "completed", "completed", "completed", "completed", "active", "idle"],
+      activePill: 6
+    },
+    {
+      tone: "success",
+      status: "COMPLETED",
       currentStep: "none",
       label: "Request",
       primary: {
@@ -287,55 +330,29 @@ function initWalkthrough() {
         type: "json",
         body: {
           id: executionId,
-          name: "order-fulfillment",
+          name: "checkout",
           version: "v1",
-          status: "FAILED",
+          status: "COMPLETED",
           startedAt: "2026-03-16T14:10:00Z",
-          updatedAt: "2026-03-16T14:10:06Z"
+          updatedAt: "2026-03-16T14:10:45Z"
         }
       },
-      logs: ["execution marked failed", "state persisted", "status available via API"],
-      badges: ["failed", "persisted", "inspectable"],
-      timeline: ["completed", "completed", "completed", "failed", "compensated", "active", "optional"],
-      activePill: 5
-    },
-    {
-      tone: "api",
-      status: "FAILED",
-      currentStep: "callback-complete",
-      label: "Runtime block",
-      primary: {
-        type: "json",
-        body: {
-          callback: "onFailureCallback",
-          request: {
-            url: "http://notifications/workflow-failed",
-            verb: "POST",
-            body: {
-              orderId: "ORD-123"
-            }
-          },
-          response: {
-            status: "accepted"
-          },
-          result: "success"
-        }
-      },
-      logs: ["onFailureCallback queued", "onFailureCallback sent", "failure notification accepted"],
-      badges: ["callback", "optional"],
-      timeline: ["completed", "completed", "completed", "failed", "compensated", "completed", "active"],
-      activePill: 6
+      logs: ["create-shipment completed", "workflow completed", "state persisted"],
+      badges: ["completed", "persisted", "inspectable"],
+      timeline: ["completed", "completed", "completed", "completed", "completed", "completed", "completed", "active"],
+      activePill: 7
     }
   ];
 
   const pillLabels = [
     "stored definition",
     "run request",
-    "step success",
-    "step failure",
-    "compensation",
-    "final status",
-    "callback"
+    "switch eval",
+    "branch runs",
+    "async fires",
+    "waiting",
+    "callback",
+    "completed"
   ];
 
   const steps = Array.from(root.querySelectorAll("[data-walkthrough-step]"));
@@ -739,6 +756,7 @@ function timelineIcon(state, number) {
   if (state === "failed") return "!";
   if (state === "compensated") return "↺";
   if (state === "active") return "•";
+  if (state === "waiting") return "~";
   if (state === "optional") return "?";
   return String(number);
 }

@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Saga Orchestration Without Workflow Platform Overhead | Trama</title>
-    <meta name="description" content="Trama is a minimal saga orchestration runtime for distributed workflows across microservices using HTTP APIs, retries, compensation, state tracking, and execution visibility." />
+    <title>Distributed Workflow Orchestration Without Platform Overhead | Trama</title>
+    <meta name="description" content="Trama is a distributed workflow runtime for microservices. Define linear sagas or branching node graphs and let Trama handle retries, compensation, async callbacks, and execution state." />
     <link rel="canonical" href="https://trama.run/" />
-    <meta property="og:title" content="Saga Orchestration Without Workflow Platform Overhead | Trama" />
-    <meta property="og:description" content="Trama is a minimal saga orchestration runtime for distributed workflows across microservices using HTTP APIs, retries, compensation, state tracking, and execution visibility." />
+    <meta property="og:title" content="Distributed Workflow Orchestration Without Platform Overhead | Trama" />
+    <meta property="og:description" content="Trama is a distributed workflow runtime for microservices. Define linear sagas or branching node graphs and let Trama handle retries, compensation, async callbacks, and execution state." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://trama.run/" />
     <meta property="og:site_name" content="Trama" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Saga Orchestration Without Workflow Platform Overhead | Trama" />
-    <meta name="twitter:description" content="Trama is a minimal saga orchestration runtime for distributed workflows across microservices using HTTP APIs, retries, compensation, state tracking, and execution visibility." />
+    <meta name="twitter:title" content="Distributed Workflow Orchestration Without Platform Overhead | Trama" />
+    <meta name="twitter:description" content="Trama is a distributed workflow runtime for microservices. Define linear sagas or branching node graphs and let Trama handle retries, compensation, async callbacks, and execution state." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
@@ -33,7 +33,7 @@
             "@type": "WebSite",
             "name": "Trama",
             "url": "https://trama.run/",
-            "description": "Trama is a minimal saga orchestration runtime for distributed workflows across microservices using HTTP APIs, retries, compensation, state tracking, and execution visibility."
+            "description": "Trama is a focused saga and workflow runtime for distributed systems. Coordinate multi-step flows across microservices with branching, async tasks, retries, compensation, and execution visibility."
           },
           {
             "@type": "SoftwareApplication",
@@ -44,7 +44,7 @@
             "license": "https://github.com/thiagoribeiro/trama/blob/main/LICENSE",
             "codeRepository": "https://github.com/thiagoribeiro/trama",
             "url": "https://trama.run/",
-            "description": "Minimal saga orchestration runtime for distributed workflows across microservices using HTTP APIs, retries, compensation, state tracking, and execution visibility."
+            "description": "Focused saga and workflow runtime for distributed systems. Coordinate multi-step flows across microservices with branching, async tasks, retries, compensation, and execution visibility."
           }
         ]
       }
@@ -79,10 +79,10 @@
 
     <main class="container reveal">
       <section class="hero">
-        <p class="kicker">Minimal Saga Runtime</p>
-        <h1>Saga orchestration without workflow platform overhead.</h1>
-        <p class="hero-subtitle">Trama is a minimal runtime for coordinating distributed workflows across microservices using HTTP APIs.</p>
-        <p class="lead">It executes saga steps, stores execution state, handles retries and compensation, and exposes execution visibility without requiring a full workflow engine.</p>
+        <p class="kicker">Saga and Workflow Runtime</p>
+        <h1>Distributed workflow orchestration without platform overhead.</h1>
+        <p class="hero-subtitle">Define linear sagas or branching node graphs, execute them through a simple HTTP API, and let Trama handle retries, compensation, async callbacks, and execution state.</p>
+        <p class="lead">Trama coordinates distributed workflows while keeping services focused on business logic. No SDKs. No framework integration. No platform migration required.</p>
         <div class="actions hero-actions">
           <a class="btn" href="install.html">Get Started</a>
           <a class="btn ghost" href="https://github.com/thiagoribeiro/trama">View on GitHub</a>
@@ -94,13 +94,13 @@
 
       <section class="comparison-runtime">
         <p class="section-kicker">Comparison</p>
-        <h2>Saga orchestration without chaos</h2>
+        <h2>Orchestration without chaos</h2>
         <p class="comparison-runtime-subtitle">Distributed workflows become hard to reason about when orchestration logic lives inside individual services.</p>
         <div class="comparison-runtime-grid">
           <article class="comparison-runtime-column">
-            <h3>Hand-rolled saga orchestration</h3>
+            <h3>Hand-rolled orchestration</h3>
             <ul class="comparison-runtime-list comparison-runtime-list-neutral">
-              <li>Saga orchestration logic spread across multiple services</li>
+              <li>Logic spread across multiple services</li>
               <li>Retry and rollback behavior implemented inconsistently</li>
               <li>Compensation flows duplicated across teams</li>
               <li>Execution state buried in logs</li>
@@ -112,26 +112,43 @@
           <article class="comparison-runtime-column comparison-runtime-column-positive">
             <h3>With Trama</h3>
             <ul class="comparison-runtime-list comparison-runtime-list-positive">
-              <li>Dedicated runtime for saga orchestration</li>
+              <li>Dedicated runtime for saga and workflow orchestration</li>
+              <li>Linear and node-graph definitions in the same runtime</li>
+              <li>Branching at runtime via switch nodes and JSON Logic</li>
+              <li>Async task coordination with signed callback tokens</li>
               <li>Consistent retry and compensation policies</li>
               <li>Durable execution state persisted by the runtime</li>
               <li>Clear step-by-step execution history</li>
               <li>API to inspect and debug running workflows</li>
               <li>Built-in metrics and tracing</li>
-              <li>Explicit failure handling and compensation flows</li>
+              <li>No SDK or framework integration required</li>
+              <li>Adoption requires only HTTP integration</li>
             </ul>
           </article>
         </div>
-        <p class="comparison-runtime-closing">Trama moves workflow coordination out of services and into a dedicated runtime.</p>
+        <p class="comparison-runtime-closing">Trama sits between hand-rolled orchestration and full workflow platforms, without requiring a platform adoption project.</p>
+      </section>
+
+      <section>
+        <h3>Async execution flow</h3>
+        <div class="arch-flow">
+          <span class="arch-node">Client</span><span class="arch-arrow">→</span>
+          <span class="arch-node">Trama</span><span class="arch-arrow">→</span>
+          <span class="arch-node">Service (202)</span><span class="arch-arrow">→</span>
+          <span class="arch-node">Trama waits</span><span class="arch-arrow">→</span>
+          <span class="arch-node">Callback received</span><span class="arch-arrow">→</span>
+          <span class="arch-node">Execution resumes</span>
+        </div>
+        <p class="muted" style="margin-top: 0.6rem;">Trama injects a callback URL into async requests and resumes execution when the callback is received.</p>
       </section>
 
       <section class="walkthrough-section" data-walkthrough>
         <div class="walkthrough-header">
           <div>
             <p class="section-kicker">Execution Walkthrough</p>
-            <h2>Watch Trama handle a real failure</h2>
-            <p class="walkthrough-subtitle">A stored saga definition is created, execution starts with input payload, one step succeeds, the next fails, compensation runs, and the execution ends with a durable failed result.</p>
-            <p class="walkthrough-helper">Failure is part of the flow. Trama makes it explicit.</p>
+            <h2>Watch Trama coordinate a branching workflow</h2>
+            <p class="walkthrough-subtitle">A stored workflow definition is created, execution starts, a switch node evaluates the payload and picks a branch, the selected branch fires an async task, execution pauses waiting for a callback, the callback resumes it, and the workflow completes.</p>
+            <p class="walkthrough-helper">The same execution model works with any service that can receive HTTP requests.</p>
           </div>
           <div class="walkthrough-controls">
             <button class="walkthrough-control" type="button" data-walkthrough-prev>Previous</button>
@@ -146,14 +163,14 @@
               <span class="walkthrough-step-icon">1</span>
               <div class="walkthrough-step-copy">
                 <strong>1. Create stored definition</strong>
-                <span>Persist the reusable saga definition before any run starts.</span>
+                <span>Persist the reusable workflow definition before any run starts.</span>
               </div>
               <span class="walkthrough-step-state">idle</span>
             </li>
             <li class="walkthrough-step" data-walkthrough-step data-step-index="1" tabindex="0">
               <span class="walkthrough-step-icon">2</span>
               <div class="walkthrough-step-copy">
-                <strong>2. Run stored saga</strong>
+                <strong>2. Run stored workflow</strong>
                 <span>Create an execution from the stored definition and input payload.</span>
               </div>
               <span class="walkthrough-step-state">idle</span>
@@ -161,43 +178,50 @@
             <li class="walkthrough-step" data-walkthrough-step data-step-index="2" tabindex="0">
               <span class="walkthrough-step-icon">3</span>
               <div class="walkthrough-step-copy">
-                <strong>3. reserve-inventory succeeds</strong>
-                <span>The first step completes and Trama advances the workflow state.</span>
+                <strong>3. Evaluate switch (branch decision)</strong>
+                <span>Trama evaluates the JSON Logic expression and picks the matching branch.</span>
               </div>
               <span class="walkthrough-step-state">idle</span>
             </li>
             <li class="walkthrough-step" data-walkthrough-step data-step-index="3" tabindex="0">
               <span class="walkthrough-step-icon">4</span>
               <div class="walkthrough-step-copy">
-                <strong>4. charge-payment fails</strong>
-                <span>A failed step becomes explicit runtime state instead of hidden app logic.</span>
+                <strong>4. Execute selected branch</strong>
+                <span>The pix-payment async task node dispatches its request to the external service.</span>
               </div>
               <span class="walkthrough-step-state">idle</span>
             </li>
             <li class="walkthrough-step" data-walkthrough-step data-step-index="4" tabindex="0">
               <span class="walkthrough-step-icon">5</span>
               <div class="walkthrough-step-copy">
-                <strong>5. reserve-inventory compensation runs</strong>
-                <span>Trama drives rollback from the last known successful state.</span>
+                <strong>5. Async step returns 202</strong>
+                <span>The service accepts the request asynchronously. Trama pauses the execution.</span>
               </div>
               <span class="walkthrough-step-state">idle</span>
             </li>
             <li class="walkthrough-step" data-walkthrough-step data-step-index="5" tabindex="0">
               <span class="walkthrough-step-icon">6</span>
               <div class="walkthrough-step-copy">
-                <strong>6. Execution ends as failed</strong>
-                <span>The final result is stored and inspectable through the API.</span>
+                <strong>6. Wait for callback</strong>
+                <span>Execution status is WAITING. The runtime holds state until the callback arrives.</span>
               </div>
               <span class="walkthrough-step-state">idle</span>
             </li>
-            <li class="walkthrough-step" data-walkthrough-step data-step-index="6" data-optional="true" tabindex="0">
+            <li class="walkthrough-step" data-walkthrough-step data-step-index="6" tabindex="0">
               <span class="walkthrough-step-icon">7</span>
               <div class="walkthrough-step-copy">
-                <strong>7. Optional onFailureCallback</strong>
-                <span>Configured notifications can still run after the saga is failed.</span>
-                <em>optional</em>
+                <strong>7. Callback resumes execution</strong>
+                <span>The external service POSTs back with a signed token. Trama validates and re-enqueues.</span>
               </div>
-              <span class="walkthrough-step-state">optional</span>
+              <span class="walkthrough-step-state">idle</span>
+            </li>
+            <li class="walkthrough-step" data-walkthrough-step data-step-index="7" tabindex="0">
+              <span class="walkthrough-step-icon">8</span>
+              <div class="walkthrough-step-copy">
+                <strong>8. Workflow completes successfully</strong>
+                <span>The final result is stored and inspectable through the API.</span>
+              </div>
+              <span class="walkthrough-step-state">idle</span>
             </li>
           </ol>
 
@@ -230,7 +254,7 @@
 
         <div class="walkthrough-summary">
           <h3>What this shows</h3>
-          <p>Trama stores the execution, coordinates step processing, triggers compensation after failure, and keeps the final state inspectable through the API.</p>
+          <p>Trama evaluates the switch node, routes to the pix branch, pauses on the async step, validates the callback token, resumes execution from the next node, and stores the completed state through the API.</p>
         </div>
       </section>
 
@@ -245,13 +269,22 @@
               <span class="arch-node">Execution Store</span><span class="arch-arrow">→</span>
               <span class="arch-node">Queue</span><span class="arch-arrow">→</span>
               <span class="arch-node">Workers</span><span class="arch-arrow">→</span>
-              <span class="arch-node">Services</span><span class="arch-arrow">→</span>
-              <span class="arch-node">Termination notice</span>
+              <span class="arch-node">Node handlers</span><span class="arch-arrow">→</span>
+              <span class="arch-node">Services</span>
             </div>
+            
+            <div class="arch-flow" style="margin-top: 2.6rem;">
+              <span class="arch-node">Services</span><span class="arch-arrow">→</span>
+              <span class="arch-node">Callback receiver</span><span class="arch-arrow">→</span>
+              <span class="arch-node">Queue</span><span class="arch-arrow">→</span>
+              <span class="arch-node">Resume</span>
+            </div>
+            <p class="muted" style="margin-top: 0.8rem; font-size: 0.85em;">Task nodes call services. Switch nodes choose execution paths. Async nodes pause and resume through callbacks.</p>
           </article>
           <article class="card">
-            <p>Trama separates orchestration from execution. The API receives workflow requests and stores execution state before work is handed to step workers.</p>
-            <p>Workers process queued steps while Trama manages retry logic, compensation, and progress tracking.</p>
+            <p>Trama separates orchestration from execution. The API stores execution state and enqueues work before handing it to workers. Workers dispatch each node to the appropriate handler — task nodes make HTTP calls, switch nodes evaluate JSON Logic expressions and route to the next node.</p>
+            <p>Async task nodes pause execution and wait. When the external service calls back with a signed token, the callback receiver validates and re-enqueues the execution to resume.</p>
+            <p>Trama integrates through HTTP and does not require changes to existing services.</p>
             <p><a href="architecture.html">Explore the full architecture guide</a></p>
           </article>
         </div>
@@ -263,42 +296,41 @@
         <p class="comparison-runtime-subtitle">Trama provides the primitives required to safely coordinate distributed workflows in production.</p>
         <div class="grid-2">
           <article class="card feature-card">
-            <h3>Horizontal execution scaling</h3>
-            <p>Saga steps are processed by workers consuming tasks from queues. Workers can scale horizontally while execution state remains persisted and workers stay stateless.</p>
+            <h3>Linear and branching execution</h3>
+            <p>Execute both sequential flows and conditional workflows using switch nodes.</p>
+          </article>
+          <article class="card feature-card">
+            <h3>Async callback coordination</h3>
+            <p>Pause execution on async steps and resume via signed callbacks (or timeout).</p>
+          </article>
+          <article class="card feature-card">
+            <h3>Failure-aware runtime</h3>
+            <p>Built-in retry and compensation handling across all workflow steps.</p>
           </article>
           <article class="card feature-card">
             <h3>Dynamic request templating</h3>
-            <p>Saga step requests can render values from the execution payload and previous step results directly into HTTP requests.</p>
+            <p>Inject payload and step results into HTTP requests using templates.</p>
             <div class="capability-snippet"><code>"orderId": "{{payload.orderId}}"</code></div>
+            <div class="capability-snippet"><code>"reservationId": "{{nodes.reserve.response.body.id}}"</code></div>
           </article>
           <article class="card feature-card">
-            <h3>Failure-aware execution</h3>
-            <p>Retry and compensation behavior are defined in the saga definition. When a step fails, Trama triggers compensating actions for previously completed steps.</p>
+            <h3>Durable execution state</h3>
+            <p>Persist execution state and inspect workflow progress through the API.</p>
           </article>
           <article class="card feature-card">
-            <h3>Persistent workflow state</h3>
-            <p>Execution state is durably stored and can be inspected through the API, including which steps succeeded, failed, or were compensated.</p>
-            <div class="capability-state">
-              <span>✓ reserve-inventory</span>
-              <span>✓ charge-payment</span>
-              <span>✗ create-shipment</span>
-              <span>compensation started</span>
-            </div>
-          </article>
-          <article class="card feature-card">
-            <h3>Metrics and tracing</h3>
-            <p>Trama exposes execution metrics and traces so teams can monitor workflow throughput, failures, retries, and latency across distributed workflows.</p>
+            <h3>Observability primitives</h3>
+            <p>Expose metrics and traces for workflow execution, failures, and callbacks.</p>
           </article>
           <article class="card feature-card">
             <h3>API-first orchestration</h3>
-            <p>Trama exposes an HTTP API and OpenAPI contract, so workflows can be triggered and inspected from any language or platform without SDK coupling.</p>
+            <p>Trama exposes an HTTP API and OpenAPI contract. Workflows can be triggered and inspected from any language or platform. No SDK, framework integration, or platform migration is required.</p>
           </article>
         </div>
       </section>
 
       <section>
         <p class="section-kicker">Comparison</p>
-        <h2>Most teams do not need a workflow platform.</h2>
+        <h2>Most teams do not need a full workflow platform.</h2>
         <p class="narrative-copy">There are three common approaches to distributed workflows.</p>
         <table class="comparison-table">
           <thead>
@@ -316,8 +348,8 @@
             </tr>
             <tr class="is-trama">
               <td><strong>Trama</strong></td>
-              <td>Focused runtime for distributed workflows executed through a simple API.</td>
-              <td>Centralizes saga coordination without turning workflow management into a platform project.</td>
+              <td>Dedicated workflow runtime. Linear sagas, branching node graphs, and async task coordination through a simple HTTP API.</td>
+              <td>Centralizes workflow coordination without turning it into a platform project.</td>
             </tr>
             <tr>
               <td><strong>Heavy workflow engines</strong></td>
@@ -336,29 +368,39 @@
             <h3>Order processing</h3>
             <div class="plain-list">
               <span>reserve inventory</span>
-              <span>charge payment</span>
+              <span>route to payment method</span>
+              <span>async payment authorization</span>
               <span>create shipment</span>
+              <span>compensate on failure</span>
             </div>
           </article>
           <article class="card use-case-card">
             <h3>Financial workflows</h3>
             <div class="plain-list">
-              <span>authorize transaction</span>
+              <span>async authorize transaction</span>
+              <span>branch on authorization result</span>
               <span>execute settlement</span>
               <span>record ledger entry</span>
+              <span>notify on completion or failure</span>
             </div>
           </article>
           <article class="card use-case-card">
             <h3>Operational pipelines</h3>
-            <p>Multi-service data processing flows that need retries, compensation, and inspectable execution state.</p>
+            <div class="plain-list">
+              <span>trigger multi-service data flow</span>
+              <span>branch on upstream result</span>
+              <span>retry on transient failures</span>
+              <span>compensate partial completions</span>
+              <span>inspect full execution history</span>
+            </div>
           </article>
         </div>
       </section>
 
       <section class="cta-band">
         <p class="section-kicker">Closing</p>
-        <h2>Stop hand-rolling saga orchestration.</h2>
-        <p>Run Trama locally and execute a real workflow. Inspect the execution state, simulate failures, and evaluate the runtime behavior directly.</p>
+        <h2>Stop implementing workflow orchestration inside services.</h2>
+        <p>Run Trama locally. Call the API. Execute a real workflow. Watch it run.</p>
         <div class="actions" style="margin-top: 1rem;">
           <a class="btn" href="install.html">Get Started</a>
           <a class="btn ghost" href="examples.html">Explore Examples</a>

@@ -53,6 +53,7 @@
       <aside class="sidebar">
         <a href="#overview" class="active">Overview</a>
         <a href="#core">Core Keys</a>
+        <a href="#callback">Async Callback</a>
         <a href="#redis-cluster">Redis Cluster</a>
         <a href="#env">Environment Overrides</a>
         <a href="#profiles">Config Profiles</a>
@@ -80,27 +81,78 @@
         <table>
           <thead><tr><th>Key</th><th>Default</th><th>Purpose</th></tr></thead>
           <tbody>
-            <tr><td><code>runtime.enabled</code></td><td><code>true</code></td><td>Enable workers.</td></tr>
-            <tr><td><code>runtime.workerCount</code></td><td><code>4</code></td><td>Worker concurrency.</td></tr>
-            <tr><td><code>runtime.maxStepsPerExecution</code></td><td><code>25</code></td><td>Checkpoint cadence.</td></tr>
-            <tr><td><code>runtime.store</code></td><td><code>REDIS</code></td><td>Execution storage backend.</td></tr>
-            <tr><td><code>redis.topology</code></td><td><code>STANDALONE</code></td><td>Choose standalone Redis or Redis Cluster client mode.</td></tr>
-            <tr><td><code>redis.cluster.nodes</code></td><td><code>[]</code></td><td>Cluster seed nodes used when <code>redis.topology=CLUSTER</code>.</td></tr>
-            <tr><td><code>redis.queue.keyPrefix</code></td><td><code>saga:executions</code></td><td>Prefix for shard-aware ready and in-flight queues.</td></tr>
-            <tr><td><code>redis.consumer.batchSize</code></td><td><code>50</code></td><td>Queue claim batch.</td></tr>
-            <tr><td><code>redis.consumer.processingTimeoutMillis</code></td><td><code>60000</code></td><td>In-flight lease timeout.</td></tr>
-            <tr><td><code>redis.consumer.requeueIntervalMillis</code></td><td><code>5000</code></td><td>How often expired in-flight work is requeued.</td></tr>
+            <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">RUNTIME</td></tr>
+            <tr><td><code>runtime.enabled</code></td><td><code>true</code></td><td>Enable queue workers on this instance.</td></tr>
+            <tr><td><code>runtime.workerCount</code></td><td><code>4</code></td><td>Number of concurrent worker coroutines.</td></tr>
+            <tr><td><code>runtime.bufferSize</code></td><td><code>200</code></td><td>Internal dispatch channel buffer size.</td></tr>
+            <tr><td><code>runtime.emptyPollDelayMillis</code></td><td><code>50</code></td><td>Delay between polls when the queue is empty.</td></tr>
+            <tr><td><code>runtime.maxStepsPerExecution</code></td><td><code>25</code></td><td>Maximum nodes processed per worker cycle before re-enqueue.</td></tr>
+            <tr><td><code>runtime.store</code></td><td><code>REDIS</code></td><td>Execution state backend: <code>REDIS</code> or <code>POSTGRES</code>.</td></tr>
+            <tr><td><code>runtime.callback.baseUrl</code></td><td><code>""</code></td><td>Public base URL injected as <code>&#123;&#123;runtime.callback.url&#125;&#125;</code> in async task requests. Required for async tasks.</td></tr>
+            <tr><td><code>runtime.callback.hmacSecret</code></td><td><code>""</code></td><td>HMAC-SHA256 secret for signing and validating callback tokens. Required for async tasks.</td></tr>
+            <tr><td><code>runtime.callback.hmacKid</code></td><td><code>default</code></td><td>Key ID embedded in the token header for future key rotation.</td></tr>
+
+            <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">REDIS</td></tr>
+            <tr><td><code>redis.topology</code></td><td><code>STANDALONE</code></td><td>Redis client mode: <code>STANDALONE</code> or <code>CLUSTER</code>.</td></tr>
+            <tr><td><code>redis.url</code></td><td><code>redis://localhost:6379</code></td><td>Connection URL used in standalone mode.</td></tr>
+            <tr><td><code>redis.pool.maxTotal</code></td><td><code>16</code></td><td>Maximum total connections in the Redis connection pool.</td></tr>
+            <tr><td><code>redis.pool.maxIdle</code></td><td><code>16</code></td><td>Maximum idle connections kept in the pool.</td></tr>
+            <tr><td><code>redis.pool.minIdle</code></td><td><code>0</code></td><td>Minimum idle connections maintained in the pool.</td></tr>
+            <tr><td><code>redis.cluster.nodes</code></td><td><code>[]</code></td><td>Seed nodes used when <code>redis.topology=CLUSTER</code>.</td></tr>
+            <tr><td><code>redis.queue.keyPrefix</code></td><td><code>saga:executions</code></td><td>Prefix for shard-aware ready and in-flight queue keys.</td></tr>
+            <tr><td><code>redis.consumer.batchSize</code></td><td><code>50</code></td><td>Messages claimed per poll cycle.</td></tr>
+            <tr><td><code>redis.consumer.processingTimeoutMillis</code></td><td><code>60000</code></td><td>In-flight lease timeout before a message is requeued.</td></tr>
+            <tr><td><code>redis.consumer.requeueIntervalMillis</code></td><td><code>5000</code></td><td>How often expired in-flight messages are recovered.</td></tr>
             <tr><td><code>redis.sharding.virtualShardCount</code></td><td><code>1024</code></td><td>Virtual shard fan-out used by rendezvous allocation.</td></tr>
-            <tr><td><code>redis.sharding.membershipKey</code></td><td><code>saga:runtime:pods</code></td><td>Redis ZSET used for worker membership.</td></tr>
-            <tr><td><code>redis.sharding.membershipTtlMillis</code></td><td><code>10000</code></td><td>Worker membership expiration window.</td></tr>
+            <tr><td><code>redis.sharding.membershipKey</code></td><td><code>saga:runtime:pods</code></td><td>Redis ZSET tracking live worker pods.</td></tr>
+            <tr><td><code>redis.sharding.membershipTtlMillis</code></td><td><code>10000</code></td><td>Worker membership entry TTL.</td></tr>
             <tr><td><code>redis.sharding.heartbeatIntervalMillis</code></td><td><code>3000</code></td><td>How often each worker refreshes its membership entry.</td></tr>
             <tr><td><code>redis.sharding.refreshIntervalMillis</code></td><td><code>2000</code></td><td>How often each worker recalculates shard ownership.</td></tr>
             <tr><td><code>redis.sharding.claimerCount</code></td><td><code>4</code></td><td>Parallel shard claimers per worker process.</td></tr>
-            <tr><td><code>rateLimit.maxFailures</code></td><td><code>5</code></td><td>Block threshold.</td></tr>
-            <tr><td><code>metrics.enabled</code></td><td><code>true</code></td><td>Enable metrics endpoint.</td></tr>
-            <tr><td><code>telemetry.enabled</code></td><td><code>false</code></td><td>Enable OTEL exporter.</td></tr>
+
+            <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">DATABASE</td></tr>
+            <tr><td><code>database.host</code></td><td><code>db</code></td><td>Postgres host. Used when <code>runtime.store=POSTGRES</code>.</td></tr>
+            <tr><td><code>database.port</code></td><td><code>5432</code></td><td>Postgres port.</td></tr>
+            <tr><td><code>database.database</code></td><td><code>saga</code></td><td>Postgres database name.</td></tr>
+            <tr><td><code>database.user</code></td><td><code>saga</code></td><td>Postgres user.</td></tr>
+            <tr><td><code>database.password</code></td><td><code>saga</code></td><td>Postgres password.</td></tr>
+            <tr><td><code>database.pool.maxPoolSize</code></td><td><code>10</code></td><td>Maximum JDBC connection pool size.</td></tr>
+            <tr><td><code>database.pool.minIdle</code></td><td><code>1</code></td><td>Minimum idle JDBC connections.</td></tr>
+
+            <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">HTTP CLIENT</td></tr>
+            <tr><td><code>http.connectTimeoutMillis</code></td><td><code>10000</code></td><td>Outbound HTTP connect timeout for workflow task requests.</td></tr>
+            <tr><td><code>http.requestTimeoutMillis</code></td><td><code>30000</code></td><td>Total outbound HTTP request timeout.</td></tr>
+            <tr><td><code>http.socketTimeoutMillis</code></td><td><code>30000</code></td><td>Outbound HTTP socket read timeout.</td></tr>
+
+            <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">RATE LIMIT</td></tr>
+            <tr><td><code>rateLimit.enabled</code></td><td><code>true</code></td><td>Enable per-saga rate limiting.</td></tr>
+            <tr><td><code>rateLimit.maxFailures</code></td><td><code>5</code></td><td>Failure count within the window before an execution is blocked.</td></tr>
+            <tr><td><code>rateLimit.windowMillis</code></td><td><code>60000</code></td><td>Sliding window duration for failure counting.</td></tr>
+            <tr><td><code>rateLimit.blockMillis</code></td><td><code>60000</code></td><td>How long a blocked execution is held before retry is allowed.</td></tr>
+            <tr><td><code>rateLimit.keyPrefix</code></td><td><code>saga:rate</code></td><td>Redis key prefix for rate-limit counters.</td></tr>
+
+            <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">MAINTENANCE</td></tr>
+            <tr><td><code>maintenance.enabled</code></td><td><code>true</code></td><td>Enable the background partition maintenance job (Postgres only).</td></tr>
+            <tr><td><code>maintenance.partitionLookaheadMonths</code></td><td><code>13</code></td><td>How many months ahead to pre-create Postgres partitions.</td></tr>
+            <tr><td><code>maintenance.partitionStartOffsetMonths</code></td><td><code>1</code></td><td>How many months back to start partition creation.</td></tr>
+            <tr><td><code>maintenance.retentionDays</code></td><td><code>15</code></td><td>Days of execution history to retain before purging.</td></tr>
+            <tr><td><code>maintenance.intervalMillis</code></td><td><code>3600000</code></td><td>How often the maintenance job runs (1 hour default).</td></tr>
+
+            <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">METRICS &amp; TELEMETRY</td></tr>
+            <tr><td><code>metrics.enabled</code></td><td><code>true</code></td><td>Expose Prometheus metrics at <code>/metrics</code>.</td></tr>
+            <tr><td><code>telemetry.enabled</code></td><td><code>false</code></td><td>Enable OpenTelemetry span export.</td></tr>
+            <tr><td><code>telemetry.serviceName</code></td><td><code>trama</code></td><td>Service name attached to all exported spans.</td></tr>
+            <tr><td><code>telemetry.otlpEndpoint</code></td><td><code>http://localhost:4317</code></td><td>OTLP gRPC endpoint for trace export.</td></tr>
           </tbody>
         </table>
+
+        <h3 id="callback">Async Callback</h3>
+        <p>Async task nodes pause a workflow and wait for an external system to POST to a callback URL. The three <code>runtime.callback.*</code> keys must be set for this to work. The runtime injects <code>&#123;&#123;runtime.callback.url&#125;&#125;</code> and <code>&#123;&#123;runtime.callback.token&#125;&#125;</code> template variables into the outbound request body, so the external service knows where to call back and which token to present.</p>
+        <div class="codeblock"><pre><code>runtime:
+  callback:
+    baseUrl: "https://trama.internal"   # must be reachable by downstream services
+    hmacSecret: "change-me-in-production"
+    hmacKid: "default"</code></pre></div>
 
         <h3 id="redis-cluster">Redis Cluster</h3>
         <p>Trama now supports Redis Cluster-aware queue sharding. Ready/in-flight keys, execution metadata, and rate-limit keys are written with hash tags so multi-key Lua operations stay inside one Redis slot.</p>
