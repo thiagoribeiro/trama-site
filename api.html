@@ -74,6 +74,9 @@
           </div>
         </div>
 
+        <h3>Definition formats</h3>
+        <p>The API accepts two execution styles within the same definition model, auto-detected by the presence of <code>nodes</code>. A sequential workflow uses a <code>nodes</code> array with an <code>entrypoint</code> and task nodes linked by <code>next</code>. Add a <code>switch</code> node to branch at runtime, or set <code>action.mode: "async"</code> on any task node for callback coordination. Both styles work with stored definitions and inline runs.</p>
+
         <h3>Hello world request</h3>
         <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/run \
   -H 'Content-Type: application/json' \
@@ -86,12 +89,17 @@
         "maxAttempts": 1,
         "delayMillis": 200
       },
-      "steps": [
+      "entrypoint": "notify",
+      "nodes": [
         {
-          "name": "notify",
-          "up": {
-            "url": "http://service/run",
-            "verb": "POST"
+          "kind": "task",
+          "id": "notify",
+          "action": {
+            "mode": "sync",
+            "request": {
+              "url": "http://service/run",
+              "verb": "POST"
+            }
           }
         }
       ]
@@ -118,6 +126,7 @@
             <tr><td><span class="method post">POST</span></td><td><code>/sagas/run</code></td><td>Run inline definition</td></tr>
             <tr><td><span class="method get">GET</span></td><td><code>/sagas/{id}</code></td><td>Get execution status</td></tr>
             <tr><td><span class="method post">POST</span></td><td><code>/sagas/{id}/retry</code></td><td>Retry failed execution</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/sagas/{id}/node/{nodeId}/callback</code></td><td>Deliver async callback to a waiting node</td></tr>
             <tr><td><span class="method get">GET</span></td><td><code>/metrics</code></td><td>Prometheus metrics</td></tr>
           </tbody>
         </table>

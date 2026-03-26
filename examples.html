@@ -50,7 +50,7 @@
   <body>
     <header class="topbar"><div class="container topbar-row"><a class="brand" href="index.html">Trama</a><button class="topbar-menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation"><span></span><span></span><span></span></button><nav class="nav-links" id="site-nav"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="community.html">Community</a></nav><div class="actions"><a class="btn ghost" href="https://github.com/thiagoribeiro/trama/blob/main/scripts/saga_demo/README.md">Demo Scripts</a></div></div></header>
     <main class="container doc-layout reveal">
-      <aside class="sidebar"><a href="#create" class="active">Create Definition</a><a href="#robust">Robust Definition</a><a href="#stored">Run Stored Definition</a><a href="#inline">Inline Run</a><a href="#template">Template Usage</a><a href="#load">Load Test</a></aside>
+      <aside class="sidebar"><a href="#create" class="active">Create Definition</a><a href="#robust">Robust Definition</a><a href="#stored">Run Stored Definition</a><a href="#inline">Inline Run</a><a href="#template">Template Usage</a><a href="#v2-switch">Switch Branching</a><a href="#v2-async">Async Callback</a><a href="#load">Demo Scripts</a></aside>
       <article class="content">
         <div class="page-intro">
           <h1>Examples</h1>
@@ -81,17 +81,22 @@
       "maxAttempts": 3,
       "delayMillis": 500
     },
-    "steps": [
+    "entrypoint": "reserve-inventory",
+    "nodes": [
       {
-        "name": "reserve-inventory",
-        "up": {
-          "url": "http://inventory/reserve",
-          "verb": "POST",
-          "body": {
-            "orderId": "{{payload.orderId}}"
+        "kind": "task",
+        "id": "reserve-inventory",
+        "action": {
+          "mode": "sync",
+          "request": {
+            "url": "http://inventory/reserve",
+            "verb": "POST",
+            "body": {
+              "orderId": "{{payload.orderId}}"
+            }
           }
         },
-        "down": {
+        "compensation": {
           "url": "http://inventory/release",
           "verb": "POST",
           "body": {
@@ -103,10 +108,10 @@
   }'</code></pre></div>
 
         <h3 id="robust">Robust Definition Using All Main Fields</h3>
-        <p>This sample covers: <code>backoff</code>, multi-step flow, headers, body templates, explicit <code>successStatusCodes</code>, and success/failure callbacks.</p>
+        <p>This sample covers: <code>backoff</code>, multi-node flow, headers, body templates, explicit <code>successStatusCodes</code>, node response references, and success/failure callbacks.</p>
         <div class="codeblock"><pre><code>{
   "name": "order-fulfillment",
-  "version": "v2",
+  "version": "v1",
   "failureHandling": {
     "type": "backoff",
     "maxAttempts": 5,
@@ -115,24 +120,29 @@
     "multiplier": 2.0,
     "jitterRatio": 0.2
   },
-  "steps": [
+  "entrypoint": "reserve-inventory",
+  "nodes": [
     {
-      "name": "reserve-inventory",
-      "up": {
-        "url": "http://inventory/api/v1/reservations",
-        "verb": "POST",
-        "headers": {
-          "X-Correlation-Id": "{{payload.correlationId}}",
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "orderId": "{{payload.orderId}}",
-          "items": "{{payload.items}}"
-        },
-        "successStatusCodes": [200, 201, 202]
+      "kind": "task",
+      "id": "reserve-inventory",
+      "action": {
+        "mode": "sync",
+        "request": {
+          "url": "http://inventory/api/v1/reservations",
+          "verb": "POST",
+          "headers": {
+            "X-Correlation-Id": "{{payload.correlationId}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "orderId": "{{payload.orderId}}",
+            "items": "{{payload.items}}"
+          },
+          "successStatusCodes": [200, 201, 202]
+        }
       },
-      "down": {
-        "url": "http://inventory/api/v1/reservations/{{step.0.up.body.reservationId}}/cancel",
+      "compensation": {
+        "url": "http://inventory/api/v1/reservations/{{nodes.reserve-inventory.response.body.reservationId}}/cancel",
         "verb": "POST",
         "headers": {
           "X-Correlation-Id": "{{payload.correlationId}}"
@@ -141,26 +151,31 @@
           "reason": "compensation"
         },
         "successStatusCodes": [200, 204]
-      }
+      },
+      "next": "charge-payment"
     },
     {
-      "name": "charge-payment",
-      "up": {
-        "url": "http://payments/api/v1/charges",
-        "verb": "POST",
-        "headers": {
-          "Authorization": "Bearer {{payload.paymentToken}}",
-          "X-Correlation-Id": "{{payload.correlationId}}"
-        },
-        "body": {
-          "orderId": "{{payload.orderId}}",
-          "amount": "{{payload.amount}}",
-          "reservationId": "{{step.0.up.body.reservationId}}"
-        },
-        "successStatusCodes": [200, 201]
+      "kind": "task",
+      "id": "charge-payment",
+      "action": {
+        "mode": "sync",
+        "request": {
+          "url": "http://payments/api/v1/charges",
+          "verb": "POST",
+          "headers": {
+            "Authorization": "Bearer {{payload.paymentToken}}",
+            "X-Correlation-Id": "{{payload.correlationId}}"
+          },
+          "body": {
+            "orderId": "{{payload.orderId}}",
+            "amount": "{{payload.amount}}",
+            "reservationId": "{{nodes.reserve-inventory.response.body.reservationId}}"
+          },
+          "successStatusCodes": [200, 201]
+        }
       },
-      "down": {
-        "url": "http://payments/api/v1/charges/{{step.1.up.body.chargeId}}/refund",
+      "compensation": {
+        "url": "http://payments/api/v1/charges/{{nodes.charge-payment.response.body.chargeId}}/refund",
         "verb": "POST",
         "headers": {
           "Authorization": "Bearer {{payload.paymentToken}}",
@@ -182,7 +197,7 @@
     },
     "body": {
       "orderId": "{{payload.orderId}}",
-      "chargeId": "{{step.1.up.body.chargeId}}"
+      "chargeId": "{{nodes.charge-payment.response.body.chargeId}}"
     },
     "successStatusCodes": [200, 202, 204]
   },
@@ -208,21 +223,164 @@
         <h3 id="inline">Run Inline Definition</h3>
         <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/run \
   -H 'Content-Type: application/json' \
-  -d '{"definition": {"name":"inline","version":"v1","failureHandling":{"type":"retry","maxAttempts":1,"delayMillis":200},"steps":[...]},"payload":{}}'</code></pre></div>
+  -d '{
+    "definition": {
+      "name": "inline",
+      "version": "v1",
+      "failureHandling": {
+        "type": "retry",
+        "maxAttempts": 1,
+        "delayMillis": 200
+      },
+      "entrypoint": "notify",
+      "nodes": [
+        {
+          "kind": "task",
+          "id": "notify",
+          "action": {
+            "mode": "sync",
+            "request": {
+              "url": "http://service/run",
+              "verb": "POST"
+            }
+          }
+        }
+      ]
+    },
+    "payload": {}
+  }'</code></pre></div>
 
         <h3 id="template">Template Example</h3>
         <div class="codeblock"><pre><code>{
-  "url": "http://service/charge?reservation={{step.0.up.body.id}}",
+  "url": "http://service/charge?reservation={{nodes.reserve-inventory.response.body.id}}",
   "verb": "POST",
   "body": {
     "amount": "{{payload.amount}}"
   }
 }</code></pre></div>
 
-        <h3 id="load">Load & Demo Scripts</h3>
+        <h3 id="v2-switch">Switch Branching</h3>
+        <p>Run an inline saga that routes to a different payment node based on <code>paymentMethod</code>. The <code>choose-payment</code> switch node evaluates a JSON Logic expression against the input payload and dispatches to <code>pix-payment</code>, <code>card-payment</code>, or a fallback.</p>
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/run \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "definition": {
+      "name": "checkout-v2",
+      "version": "v1",
+      "failureHandling": { "type": "retry", "maxAttempts": 2, "delayMillis": 100 },
+      "entrypoint": "choose-payment",
+      "nodes": [
+        {
+          "kind": "switch",
+          "id": "choose-payment",
+          "cases": [
+            {
+              "name": "pix",
+              "when": { "==": [{ "var": "input.paymentMethod" }, "pix"] },
+              "target": "pix-payment"
+            },
+            {
+              "name": "card",
+              "when": { "==": [{ "var": "input.paymentMethod" }, "card"] },
+              "target": "card-payment"
+            }
+          ],
+          "default": "fallback-payment"
+        },
+        {
+          "kind": "task",
+          "id": "pix-payment",
+          "action": {
+            "mode": "sync",
+            "request": {
+              "url": "http://payments/pix",
+              "verb": "POST",
+              "body": { "orderId": "{{payload.orderId}}" }
+            }
+          },
+          "compensation": { "url": "http://payments/pix/cancel", "verb": "POST" }
+        },
+        {
+          "kind": "task",
+          "id": "card-payment",
+          "action": {
+            "mode": "sync",
+            "request": {
+              "url": "http://payments/card",
+              "verb": "POST",
+              "body": { "orderId": "{{payload.orderId}}" }
+            }
+          },
+          "compensation": { "url": "http://payments/card/cancel", "verb": "POST" }
+        },
+        {
+          "kind": "task",
+          "id": "fallback-payment",
+          "action": {
+            "mode": "sync",
+            "request": { "url": "http://payments/fallback", "verb": "POST" }
+          }
+        }
+      ]
+    },
+    "payload": { "orderId": "ord-456", "paymentMethod": "pix" }
+  }'</code></pre></div>
+
+        <h3 id="v2-async">Async Callback</h3>
+        <p>An async task node fires its outbound request and pauses the workflow. Trama injects <code>&#123;&#123;runtime.callback.url&#125;&#125;</code> and <code>&#123;&#123;runtime.callback.token&#125;&#125;</code> into the request body. The external service must POST to the callback URL with the token header to resume execution.</p>
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/run \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "definition": {
+      "name": "payment-async",
+      "version": "v1",
+      "failureHandling": { "type": "retry", "maxAttempts": 2, "delayMillis": 200 },
+      "entrypoint": "authorize",
+      "nodes": [
+        {
+          "kind": "task",
+          "id": "authorize",
+          "action": {
+            "mode": "async",
+            "request": {
+              "url": "http://payments/authorize",
+              "verb": "POST",
+              "body": {
+                "orderId": "{{payload.orderId}}",
+                "callbackUrl": "{{runtime.callback.url}}",
+                "callbackToken": "{{runtime.callback.token}}"
+              }
+            },
+            "acceptedStatusCodes": [202],
+            "callback": { "timeoutMillis": 30000 }
+          },
+          "compensation": { "url": "http://payments/authorize/cancel", "verb": "POST" },
+          "next": "capture"
+        },
+        {
+          "kind": "task",
+          "id": "capture",
+          "action": {
+            "mode": "sync",
+            "request": { "url": "http://payments/capture", "verb": "POST" }
+          }
+        }
+      ]
+    },
+    "payload": { "orderId": "ord-789", "amount": 150.00 }
+  }'</code></pre></div>
+        <p>Once the external service is ready, it resumes the workflow by calling back:</p>
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/&lt;executionId&gt;/node/authorize/callback \
+  -H 'Content-Type: application/json' \
+  -H 'X-Callback-Token: &lt;token&gt;' \
+  -d '{ "status": "authorized", "authCode": "AUTH-001" }'</code></pre></div>
+
+        <h3 id="load">Demo Scripts</h3>
         <ul>
-          <li><code>scripts/saga_demo/run_saga.py</code></li>
-          <li><code>scripts/saga_demo/locust_square_chain_run.py</code></li>
+          <li><code>scripts/saga_demo/run_saga.py</code> — v1 linear saga scenarios</li>
+          <li><code>scripts/saga_demo/locust_square_chain_run.py</code> — load test</li>
+          <li><code>scripts/workflow_demo/run_switch_demo.py</code> — v2 switch branching scenarios</li>
+          <li><code>scripts/workflow_demo/run_async_demo.py</code> — v2 async callback demo</li>
           <li><code>scripts/saga_demo/README.md</code></li>
         </ul>
       </article>
