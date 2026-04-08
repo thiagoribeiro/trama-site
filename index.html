@@ -69,6 +69,7 @@
           <a data-nav href="observability.html">Observability</a>
           <a data-nav href="examples.html">Examples</a>
           <a data-nav href="community.html">Community</a>
+          <a data-nav href="ui.html">UI</a>
         </nav>
         <div class="actions">
           <a class="btn ghost" href="https://github.com/thiagoribeiro/trama/blob/main/openapi.json">OpenAPI</a>
@@ -81,14 +82,28 @@
       <section class="hero">
         <p class="kicker">Saga and Workflow Runtime</p>
         <h1>Distributed workflow orchestration without platform overhead.</h1>
-        <p class="hero-subtitle">Define linear sagas or branching node graphs, execute them through a simple HTTP API, and let Trama handle retries, compensation, async callbacks, and execution state.</p>
-        <p class="lead">Trama coordinates distributed workflows while keeping services focused on business logic. No SDKs. No framework integration. No platform migration required.</p>
-        <div class="actions hero-actions">
-          <a class="btn" href="install.html">Get Started</a>
-          <a class="btn ghost" href="https://github.com/thiagoribeiro/trama">View on GitHub</a>
-        </div>
-        <div style="margin-top: 0.65rem;">
-          <a href="api.html" class="muted">Read the Docs</a>
+        <div class="hero-grid">
+          <div class="hero-text">
+            <p class="hero-subtitle">Define linear sagas or branching node graphs, execute them through a simple HTTP API, and let Trama handle retries, compensation, async callbacks, and execution state.</p>
+            <p class="lead">Trama coordinates distributed workflows while keeping services focused on business logic. No SDKs. No framework integration. No platform migration required.</p>
+            <div class="actions hero-actions">
+              <a class="btn" href="install.html">Get Started</a>
+              <a class="btn ghost" href="https://github.com/thiagoribeiro/trama">View on GitHub</a>
+            </div>
+            <div style="margin-top: 0.65rem;">
+              <a href="api.html" class="muted">Read the Docs</a>
+            </div>
+          </div>
+          <div class="hero-thumb-col">
+            <button class="hero-thumb" id="open-lightbox" aria-label="View full-size screenshot">
+              <img src="assets/img/management-ui.png" alt="Trama Management UI — execution inspector showing definition graph, Gantt timeline and step details" />
+              <span class="hero-thumb-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10 2h4v4M9 7l5-5M6 14H2v-4M7 9l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </button>
+          </div>
         </div>
       </section>
 
@@ -325,6 +340,10 @@
             <h3>API-first orchestration</h3>
             <p>Trama exposes an HTTP API and OpenAPI contract. Workflows can be triggered and inspected from any language or platform. No SDK, framework integration, or platform migration is required.</p>
           </article>
+          <article class="card feature-card">
+            <h3>Visual management UI</h3>
+            <p>Inspect executions, debug step-by-step with Gantt timelines, and create or edit definitions with a built-in graph editor. <a href="ui.html">Explore the UI</a></p>
+          </article>
         </div>
       </section>
 
@@ -418,6 +437,23 @@
         <a href="https://github.com/thiagoribeiro/trama/blob/main/LICENSE">License</a>
       </div>
     </footer>
+    <div id="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Screenshot preview">
+      <button id="lightbox-close" aria-label="Close">&times;</button>
+      <img src="assets/img/management-ui.png" alt="Trama Management UI — execution inspector showing definition graph, Gantt timeline and step details" />
+    </div>
     <script src="assets/js/main.js"></script>
+    <script>
+      (function () {
+        var lb = document.getElementById('lightbox');
+        var open = document.getElementById('open-lightbox');
+        var close = document.getElementById('lightbox-close');
+        function show() { lb.classList.add('is-open'); lb.setAttribute('aria-hidden', 'false'); }
+        function hide() { lb.classList.remove('is-open'); lb.setAttribute('aria-hidden', 'true'); }
+        open.addEventListener('click', show);
+        close.addEventListener('click', hide);
+        lb.addEventListener('click', function (e) { if (e.target === lb) hide(); });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+      })();
+    </script>
   </body>
 </html>

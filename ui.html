@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Management UI | Trama</title>
+    <meta name="description" content="Trama ships a built-in web interface for managing workflow definitions, inspecting executions, and debugging step-by-step with a Gantt timeline and graph editor." />
+    <link rel="canonical" href="https://trama.run/ui.html" />
+    <meta property="og:title" content="Management UI | Trama" />
+    <meta property="og:description" content="Trama ships a built-in web interface for managing workflow definitions, inspecting executions, and debugging step-by-step with a Gantt timeline and graph editor." />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://trama.run/ui.html" />
+    <meta property="og:site_name" content="Trama" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Management UI | Trama" />
+    <meta name="twitter:description" content="Trama ships a built-in web interface for managing workflow definitions, inspecting executions, and debugging step-by-step with a Gantt timeline and graph editor." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EVMDJ83T7E"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-EVMDJ83T7E");
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Trama Management UI",
+        "description": "Trama ships a built-in web interface for managing workflow definitions, inspecting executions, and debugging step-by-step with a Gantt timeline and graph editor.",
+        "url": "https://trama.run/ui.html",
+        "mainEntityOfPage": "https://trama.run/ui.html",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Trama",
+          "url": "https://trama.run/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Trama",
+          "url": "https://trama.run/",
+          "codeRepository": "https://github.com/thiagoribeiro/trama"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header class="topbar"><div class="container topbar-row"><a class="brand" href="index.html">Trama</a><button class="topbar-menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation"><span></span><span></span><span></span></button><nav class="nav-links" id="site-nav"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="community.html">Community</a><a data-nav href="ui.html">UI</a></nav><div class="actions"><a class="btn" href="https://github.com/thiagoribeiro/trama/blob/main/README.md">README</a></div></div></header>
+
+    <main class="container doc-layout reveal">
+      <aside class="sidebar">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#screenshot">Screenshot</a>
+        <a href="#features">Features</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#running">Running locally</a>
+      </aside>
+
+      <article class="content">
+        <div class="page-intro">
+          <h1>Management UI</h1>
+          <p>Trama ships a built-in web interface that gives operators and developers full visibility into workflow definitions and executions — without querying the database directly.</p>
+          <div class="page-meta">
+            <span>Visual debugging</span>
+            <span>Definition editor</span>
+            <span>Execution inspector</span>
+          </div>
+          <div class="next-steps">
+            <a class="next-step" href="install.html"><strong>Install</strong><span>Run the full stack with Docker Compose.</span></a>
+            <a class="next-step" href="api.html"><strong>API</strong><span>Programmatic access to the same data.</span></a>
+            <a class="next-step" href="examples.html"><strong>Examples</strong><span>Sample definitions to try in the editor.</span></a>
+          </div>
+        </div>
+
+        <h3 id="overview">Overview</h3>
+        <p>
+          The management UI is available at <code>http://localhost:8000</code> when running via Docker Compose.
+          It is served by a lightweight Python BFF (<code>ui/bff/</code>) that proxies the Ktor API
+          and serves the Vue 3 single-page application.
+        </p>
+        <p>
+          The UI covers the full workflow lifecycle: create definitions with a visual graph editor,
+          trigger executions through the API, then inspect results step-by-step with a Gantt timeline
+          and per-call request/response detail.
+        </p>
+
+        <h3 id="screenshot">Screenshot</h3>
+        <div class="hero-screenshot">
+          <img src="assets/img/management-ui.png" alt="Trama Management UI — execution inspector showing definition graph, Gantt timeline and step details" />
+        </div>
+        <p style="margin-top: 0.75rem; font-size: 0.9rem; color: var(--muted);">
+          Execution inspector: definition graph with status overlay, Gantt timeline, and per-step request/response detail.
+        </p>
+
+        <h3 id="features">Features</h3>
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Section</th>
+              <th>What you can do</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Definitions</strong></td>
+              <td>List all stored definitions. Create and edit using a visual graph editor with drag-and-drop nodes. Delete with confirmation.</td>
+            </tr>
+            <tr>
+              <td><strong>Executions</strong></td>
+              <td>Browse recent executions filtered by status or name. Search by execution ID.</td>
+            </tr>
+            <tr>
+              <td><strong>Execution Inspector</strong></td>
+              <td>Definition graph with per-step status overlay (success / failed / compensated). Gantt timeline showing per-step latency and compensation phases. Per-step request and response detail with HTTP status code and duration. Retry failed executions directly from the UI.</td>
+            </tr>
+            <tr>
+              <td><strong>Graph Editor</strong></td>
+              <td>Visual node-graph editor for creating v2 definitions. Drag task and switch nodes, connect them with edges, configure via sidebar panel. Export or save directly to the API.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="architecture">Architecture</h3>
+        <p>The UI stack lives in <code>ui/</code> at the project root:</p>
+        <ul>
+          <li><code>ui/management-ui/</code> — Vue 3 + Vite single-page application</li>
+          <li><code>ui/bff/</code> — Python FastAPI backend-for-frontend: proxies Ktor API calls, aggregates execution detail, serves the built Vue assets</li>
+          <li><code>ui/definition-editor/</code> — standalone graph editor (also embedded in the management UI)</li>
+        </ul>
+        <p>
+          The browser talks only to the BFF (<code>:8000</code>). The BFF forwards <code>/api/*</code>
+          requests to the Ktor orchestrator (<code>:8080</code>). This layer exists to support future
+          authentication and response aggregation without touching the core API.
+        </p>
+
+        <h3 id="running">Running locally</h3>
+        <p>Start the full stack with Docker Compose:</p>
+        <div class="codeblock"><pre><code>docker compose up --build</code></pre></div>
+        <p>Then open <a href="http://localhost:8000" target="_blank" rel="noopener">http://localhost:8000</a>.</p>
+        <p>
+          The Ktor API remains available directly at <code>http://localhost:8080</code> for programmatic
+          access and automation.
+        </p>
+      </article>
+    </main>
+
+    <footer class="container footer">
+      <span>Apache-2.0 Licensed</span>
+      <div>
+        <a href="https://github.com/thiagoribeiro/trama/blob/main/README.md">README</a>
+        <a href="https://github.com/thiagoribeiro/trama/blob/main/openapi.json">OpenAPI</a>
+        <a href="https://github.com/thiagoribeiro/trama/blob/main/grafana/trama-saga-dashboard.json">Grafana JSON</a>
+        <a href="https://github.com/thiagoribeiro/trama/blob/main/LICENSE">License</a>
+      </div>
+    </footer>
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>
