@@ -1264,3 +1264,17 @@ pre {
     animation: none;
   }
 }
+
+/* ── Hero screenshot ─────────────────────────────────────────────────────── */
+.hero-screenshot {
+  margin-top: 2.5rem;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+
+.hero-screenshot img {
+  width: 100%;
+  display: block;
+}
