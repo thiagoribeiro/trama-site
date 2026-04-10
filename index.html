@@ -294,7 +294,7 @@
               <span class="arch-node">Queue</span><span class="arch-arrow">→</span>
               <span class="arch-node">Resume</span>
             </div>
-            <p class="muted" style="margin-top: 0.8rem; font-size: 0.85em;">Task nodes call services. Switch nodes choose execution paths. Async nodes pause and resume through callbacks.</p>
+            <p class="muted" style="margin-top: 0.8rem; font-size: 0.85em;">Task nodes call services. Switch nodes choose execution paths. Async nodes pause and resume through callbacks. Sleep nodes pause execution for a set duration.</p>
           </article>
           <article class="card">
             <p>Trama separates orchestration from execution. The API stores execution state and enqueues work before handing it to workers. Workers dispatch each node to the appropriate handler — task nodes make HTTP calls, switch nodes evaluate JSON Logic expressions and route to the next node.</p>
