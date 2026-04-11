@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CLI Tools — validate &amp; dry-run | Trama</title>
+    <meta name="description" content="Validate saga definitions and simulate execution offline with the Trama CLI. No running server needed." />
+    <link rel="canonical" href="https://trama.run/tools.html" />
+    <meta property="og:title" content="CLI Tools — validate &amp; dry-run | Trama" />
+    <meta property="og:description" content="Validate saga definitions and simulate execution offline with the Trama CLI. No running server needed." />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://trama.run/tools.html" />
+    <meta property="og:site_name" content="Trama" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="CLI Tools — validate &amp; dry-run | Trama" />
+    <meta name="twitter:description" content="Validate saga definitions and simulate execution offline with the Trama CLI. No running server needed." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EVMDJ83T7E"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-EVMDJ83T7E");
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "CLI Tools — validate & dry-run",
+        "description": "Validate saga definitions and simulate execution offline with the Trama CLI. No running server needed.",
+        "url": "https://trama.run/tools.html",
+        "mainEntityOfPage": "https://trama.run/tools.html",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Trama",
+          "url": "https://trama.run/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Trama",
+          "url": "https://trama.run/",
+          "codeRepository": "https://github.com/thiagoribeiro/trama"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header class="topbar"><div class="topbar-row"><a class="brand" href="index.html">Trama</a><button class="topbar-menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation"><span></span><span></span><span></span></button><nav class="nav-links" id="site-nav"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="tools.html">Tools</a><a data-nav href="community.html">Community</a><a data-nav href="ui.html">UI</a></nav><div class="actions"><a class="btn" href="https://github.com/thiagoribeiro/trama">GitHub</a></div></div></header>
+    <main class="container doc-layout reveal">
+      <aside class="sidebar">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#structural-check">Structural check</a>
+        <a href="#dry-run">Dry-run simulation</a>
+        <a href="#scenario-format">Scenario file format</a>
+        <a href="#exit-codes">Exit codes &amp; CI</a>
+      </aside>
+      <article class="content">
+        <div class="page-intro">
+          <h1 id="overview">Tools</h1>
+          <p>Trama ships a CLI tool that lets you validate a saga definition and simulate its execution entirely offline — no running orchestrator needed. Use it to catch structural errors and logic bugs before deploying a definition, or to gate merges in CI.</p>
+          <div class="page-meta">
+            <span>Best for developers</span>
+            <span>Offline tooling</span>
+            <span>CI-friendly</span>
+          </div>
+          <div class="next-steps">
+            <a class="next-step" href="examples.html"><strong>Examples</strong><span>Browse complete saga definitions you can validate locally.</span></a>
+            <a class="next-step" href="api.html"><strong>API</strong><span>Run definitions against the live orchestrator.</span></a>
+          </div>
+        </div>
+
+        <h3 id="structural-check">validate — structural check</h3>
+        <p>The structural check parses the definition and verifies its integrity without executing anything:</p>
+        <ul>
+          <li>Definition is valid JSON and uses the v2 <code>nodes</code> format</li>
+          <li>All node IDs are unique</li>
+          <li>The <code>entrypoint</code> references an existing node</li>
+          <li>All <code>next</code> and <code>target</code> references resolve to existing nodes</li>
+          <li>Switch nodes have a <code>default</code> target and at least one case</li>
+          <li>Async task nodes have a <code>callback</code> block with a positive <code>timeoutMillis</code></li>
+          <li>Task nodes have a <code>url</code> on their request</li>
+        </ul>
+        <div class="codeblock"><pre><code>./gradlew trama-validate --args="definition.json --validate-only"</code></pre></div>
+        <p>Output:</p>
+        <div class="codeblock"><pre><code>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  trama validate  ·  checkout-full-demo / v1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[1/1] Structural validation
+  ✓ 5 nodes  (3 task, 1 switch, 1 async)
+  ✓ all node references resolve
+
+OK</code></pre></div>
+        <p>If errors are found, each one is printed and the process exits with code <code>1</code>:</p>
+        <div class="codeblock"><pre><code>[1/1] Structural validation
+  ✗ node 'pix-paymet' referenced by 'choose-payment' does not exist
+  ✗ switch 'choose-payment' has no default target
+
+2 error(s) found. Fix them before running a simulation.</code></pre></div>
+
+        <h3 id="dry-run">validate — dry-run simulation</h3>
+        <p>Provide a scenario file to run a second phase: the tool walks the node graph using mock responses, renders all Mustache templates with real variable substitution, evaluates JSON Logic switch conditions, and prints the full execution trace. This catches bugs that structural checks cannot — wrong variable names in templates, switch conditions that never match, or a path that terminates unexpectedly.</p>
+        <p>The simulator reuses the same template engine and condition evaluator as the production orchestrator, so the trace reflects exactly what would happen at runtime.</p>
+        <div class="codeblock"><pre><code>./gradlew trama-validate --args="definition.json scenario.json"</code></pre></div>
+
+        <h4>Example: sync flow (PIX payment)</h4>
+        <p>Given this definition (abbreviated):</p>
+        <div class="codeblock"><pre><code>{
+  "name": "checkout-full-demo",
+  "version": "v1",
+  "entrypoint": "validate",
+  "nodes": [
+    {
+      "kind": "task",
+      "id": "validate",
+      "action": {
+        "mode": "sync",
+        "request": {
+          "url": "http://localhost:5003/step/validate",
+          "verb": "POST",
+          "body": { "orderId": "{{payload.orderId}}", "amount": "{{payload.amount}}" }
+        }
+      },
+      "next": "choose-payment"
+    },
+    {
+      "kind": "switch",
+      "id": "choose-payment",
+      "cases": [
+        { "name": "pix",  "when": { "==": [{ "var": "input.paymentMethod" }, "pix"]  }, "target": "pix-payment"  },
+        { "name": "card", "when": { "==": [{ "var": "input.paymentMethod" }, "card"] }, "target": "card-payment" }
+      ],
+      "default": "pix-payment"
+    },
+    {
+      "kind": "task",
+      "id": "pix-payment",
+      "action": {
+        "mode": "sync",
+        "request": {
+          "url": "http://localhost:5003/step/pix-payment",
+          "verb": "POST",
+          "body": { "orderId": "{{payload.orderId}}", "method": "pix" }
+        }
+      },
+      "next": "notify"
+    },
+    {
+      "kind": "task",
+      "id": "notify",
+      "action": {
+        "mode": "sync",
+        "request": {
+          "url": "http://localhost:5003/step/notify",
+          "verb": "POST",
+          "body": { "orderId": "{{payload.orderId}}" }
+        }
+      }
+    }
+  ]
+}</code></pre></div>
+        <p>And this scenario:</p>
+        <div class="codeblock"><pre><code>{
+  "payload": {
+    "orderId": "ord-demo-001",
+    "amount":  "99.90",
+    "paymentMethod": "pix"
+  },
+  "steps": {
+    "validate":    { "status": 200, "body": { "valid": true } },
+    "pix-payment": { "status": 200, "body": { "charged": true, "method": "pix" } },
+    "notify":      { "status": 200, "body": { "notified": true } }
+  }
+}</code></pre></div>
+        <p>Output:</p>
+        <div class="codeblock"><pre><code>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  trama validate  ·  checkout-full-demo / v1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[1/2] Structural validation
+  ✓ 5 nodes  (3 task, 1 switch, 1 async)
+  ✓ all node references resolve
+
+[2/2] Execution simulation
+  payload: {orderId=ord-demo-001, amount=99.90, paymentMethod=pix}
+
+  → validate             [sync]
+      POST    http://localhost:5003/step/validate
+      body    {"orderId":"ord-demo-001","amount":"99.90"}
+      ← 200   ✓  {"valid":true}
+
+  → choose-payment       [switch]
+      matched "pix"  →  pix-payment
+
+  → pix-payment          [sync]
+      POST    http://localhost:5003/step/pix-payment
+      body    {"orderId":"ord-demo-001","method":"pix"}
+      ← 200   ✓  {"charged":true,"method":"pix"}
+
+  → notify               [sync]
+      POST    http://localhost:5003/step/notify
+      body    {"orderId":"ord-demo-001"}
+      ← 200   ✓  {"notified":true}
+
+  ✓ SUCCEEDED
+
+All checks passed.</code></pre></div>
+
+        <h4>Example: async node (card payment)</h4>
+        <p>For async task nodes the simulator renders the outbound request, marks it as <code>[async]</code>, injects a placeholder callback body from the scenario, and pauses — mirroring exactly what the production orchestrator does:</p>
+        <div class="codeblock"><pre><code>  → card-payment         [async]
+      POST    http://localhost:5003/async-step/card-payment
+      body    {"orderId":"ord-demo-002","method":"card",
+               "callbackUrl":"https://trama/sagas/abc/node/card-payment/callback",
+               "callbackToken":"&lt;hmac-signed-token&gt;"}
+      ← 202   accepted (execution pauses here in production)
+      callback ← {"status":"approved","authCode":"AUTH-9871"}</code></pre></div>
+        <p>The scenario entry for an async node uses <code>acceptedStatus</code> and <code>callbackBody</code> instead of <code>status</code>/<code>body</code>:</p>
+        <div class="codeblock"><pre><code>"card-payment": {
+  "acceptedStatus": 202,
+  "callbackBody": { "status": "approved", "authCode": "AUTH-9871" }
+}</code></pre></div>
+
+        <h3 id="scenario-format">Scenario file format</h3>
+        <div class="codeblock"><pre><code>{
+  "payload": {
+    "&lt;key&gt;": "&lt;value&gt;"
+  },
+  "steps": {
+    "&lt;nodeId&gt;": { "status": 200, "body": { ... } },
+    "&lt;asyncNodeId&gt;": { "acceptedStatus": 202, "callbackBody": { ... } }
+  }
+}</code></pre></div>
+        <table>
+          <thead><tr><th>Field</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>payload</code></td><td>yes</td><td>Initial execution payload, available as <code>{{payload.*}}</code> in templates</td></tr>
+            <tr><td><code>steps.&lt;id&gt;.status</code></td><td>sync nodes</td><td>HTTP status code the mock returns</td></tr>
+            <tr><td><code>steps.&lt;id&gt;.body</code></td><td>sync nodes</td><td>Response body made available as <code>{{nodes.&lt;id&gt;.response.body.*}}</code></td></tr>
+            <tr><td><code>steps.&lt;id&gt;.acceptedStatus</code></td><td>async nodes</td><td>HTTP status the mock returns for the initial request (typically 202)</td></tr>
+            <tr><td><code>steps.&lt;id&gt;.callbackBody</code></td><td>async nodes</td><td>Callback payload injected when simulation resumes after the async pause</td></tr>
+          </tbody>
+        </table>
+        <p>Only nodes that actually execute need entries in <code>steps</code>. Unreached branches (e.g. the card path when testing PIX) are ignored.</p>
+
+        <h3 id="exit-codes">Exit codes &amp; CI usage</h3>
+        <table>
+          <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>0</code></td><td>All checks passed</td></tr>
+            <tr><td><code>1</code></td><td>Validation error or simulation failed</td></tr>
+          </tbody>
+        </table>
+        <p>Because the tool exits non-zero on failure, it integrates naturally with any CI system. Example GitHub Actions step:</p>
+        <div class="codeblock"><pre><code>- name: Validate saga definition
+  run: |
+    ./gradlew trama-validate \
+      --args="definitions/checkout.json scenarios/checkout-pix.json"</code></pre></div>
+        <p>Add <code>--validate-only</code> if you want the structural check only (faster, no scenario file needed):</p>
+        <div class="codeblock"><pre><code>- name: Structural check
+  run: ./gradlew trama-validate --args="definitions/checkout.json --validate-only"</code></pre></div>
+      </article>
+    </main>
+    <footer class="container footer"><span>CLI tools</span><div><a href="api.html">API</a><a href="examples.html">Examples</a></div></footer>
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>
