@@ -214,7 +214,7 @@ All checks passed.</code></pre></div>
         <div class="codeblock"><pre><code>  → card-payment         [async]
       POST    http://localhost:5003/async-step/card-payment
       body    {"orderId":"ord-demo-002","method":"card",
-               "callbackUrl":"https://trama/sagas/abc/node/card-payment/callback",
+               "callbackUrl":"https://trama/workflows/abc/node/card-payment/callback",
                "callbackToken":"&lt;hmac-signed-token&gt;"}
       ← 202   accepted (execution pauses here in production)
       callback ← {"status":"approved","authCode":"AUTH-9871"}</code></pre></div>

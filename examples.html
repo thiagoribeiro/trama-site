@@ -71,7 +71,7 @@
         <p>If you are new to Trama, start with creating a stored definition, then run the inline example, and finally move to the robust sample with retries, compensation, callbacks, and templates.</p>
 
         <h3 id="create">Create and Store a Definition</h3>
-        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/definitions \
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/definitions \
   -H 'Content-Type: application/json' \
   -d '{
     "name": "order-saga",
@@ -216,12 +216,12 @@
 }</code></pre></div>
 
         <h3 id="stored">Run Stored Definition</h3>
-        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/definitions/order-saga/v1/run \
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/definitions/order-saga/v1/run \
   -H 'Content-Type: application/json' \
   -d '{"payload": {"orderId": "ord-123", "amount": 99.5}}'</code></pre></div>
 
         <h3 id="inline">Run Inline Definition</h3>
-        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/run \
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/run \
   -H 'Content-Type: application/json' \
   -d '{
     "definition": {
@@ -261,7 +261,7 @@
 
         <h3 id="v2-switch">Switch Branching</h3>
         <p>Run an inline saga that routes to a different payment node based on <code>paymentMethod</code>. The <code>choose-payment</code> switch node evaluates a JSON Logic expression against the input payload and dispatches to <code>pix-payment</code>, <code>card-payment</code>, or a fallback.</p>
-        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/run \
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/run \
   -H 'Content-Type: application/json' \
   -d '{
     "definition": {
@@ -328,7 +328,7 @@
 
         <h3 id="v2-async">Async Callback</h3>
         <p>An async task node fires its outbound request and pauses the workflow. Trama injects <code>&#123;&#123;runtime.callback.url&#125;&#125;</code> and <code>&#123;&#123;runtime.callback.token&#125;&#125;</code> into the request body. The external service must POST to the callback URL with the token header to resume execution.</p>
-        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/run \
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/run \
   -H 'Content-Type: application/json' \
   -d '{
     "definition": {
@@ -370,14 +370,14 @@
     "payload": { "orderId": "ord-789", "amount": 150.00 }
   }'</code></pre></div>
         <p>Once the external service is ready, it resumes the workflow by calling back:</p>
-        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/&lt;executionId&gt;/node/authorize/callback \
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/&lt;executionId&gt;/node/authorize/callback \
   -H 'Content-Type: application/json' \
   -H 'X-Callback-Token: &lt;token&gt;' \
   -d '{ "status": "authorized", "authCode": "AUTH-001" }'</code></pre></div>
 
         <h3 id="v2-sleep">Sleep Pause</h3>
         <p>A <code>sleep</code> node pauses the workflow for a configurable duration before advancing to the next node. Use it for time-based orchestration — e.g., wait 24 hours before sending a follow-up notification, or introduce a cooling-off period between steps.</p>
-        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/run \
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/run \
   -H 'Content-Type: application/json' \
   -d '{
     "definition": {
@@ -414,7 +414,7 @@
     "payload": { "orderId": "ord-999" }
   }'</code></pre></div>
         <p>The execution status becomes <code>SLEEPING</code> while waiting. To skip the remaining wait and resume immediately:</p>
-        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/&lt;executionId&gt;/wake
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/&lt;executionId&gt;/wake
 # 202 Accepted — execution re-enqueued at the next node</code></pre></div>
 
         <h3 id="load">Demo Scripts</h3>

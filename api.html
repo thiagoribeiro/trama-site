@@ -78,7 +78,7 @@
         <p>The API accepts two execution styles within the same definition model, auto-detected by the presence of <code>nodes</code>. A sequential workflow uses a <code>nodes</code> array with an <code>entrypoint</code> and task nodes linked by <code>next</code>. Add a <code>switch</code> node to branch at runtime, set <code>action.mode: "async"</code> on any task node for callback coordination, or add a <code>sleep</code> node to pause the workflow for a configurable duration before continuing. Both styles work with stored definitions and inline runs.</p>
 
         <h3>Hello world request</h3>
-        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/sagas/run \
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/run \
   -H 'Content-Type: application/json' \
   -d '{
     "definition": {
@@ -117,17 +117,17 @@
           <tbody>
             <tr><td><span class="method get">GET</span></td><td><code>/healthz</code></td><td>Liveness probe</td></tr>
             <tr><td><span class="method get">GET</span></td><td><code>/readyz</code></td><td>Readiness probe</td></tr>
-            <tr><td><span class="method post">POST</span></td><td><code>/sagas/definitions</code></td><td>Create definition</td></tr>
-            <tr><td><span class="method get">GET</span></td><td><code>/sagas/definitions</code></td><td>List definitions</td></tr>
-            <tr><td><span class="method get">GET</span></td><td><code>/sagas/definitions/{id}</code></td><td>Get definition</td></tr>
-            <tr><td><span class="method put">PUT</span></td><td><code>/sagas/definitions/{id}</code></td><td>Insert definition by id</td></tr>
-            <tr><td><span class="method delete">DELETE</span></td><td><code>/sagas/definitions/{id}</code></td><td>Delete definition</td></tr>
-            <tr><td><span class="method post">POST</span></td><td><code>/sagas/definitions/{name}/{version}/run</code></td><td>Run stored definition</td></tr>
-            <tr><td><span class="method post">POST</span></td><td><code>/sagas/run</code></td><td>Run inline definition</td></tr>
-            <tr><td><span class="method get">GET</span></td><td><code>/sagas/{id}</code></td><td>Get execution status</td></tr>
-            <tr><td><span class="method post">POST</span></td><td><code>/sagas/{id}/retry</code></td><td>Retry failed execution</td></tr>
-            <tr><td><span class="method post">POST</span></td><td><code>/sagas/{id}/wake</code></td><td>Wake a sleeping execution early</td></tr>
-            <tr><td><span class="method post">POST</span></td><td><code>/sagas/{id}/node/{nodeId}/callback</code></td><td>Deliver async callback to a waiting node</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/workflows/definitions</code></td><td>Create definition</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/workflows/definitions</code></td><td>List definitions</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/workflows/definitions/{id}</code></td><td>Get definition</td></tr>
+            <tr><td><span class="method put">PUT</span></td><td><code>/workflows/definitions/{id}</code></td><td>Insert definition by id</td></tr>
+            <tr><td><span class="method delete">DELETE</span></td><td><code>/workflows/definitions/{id}</code></td><td>Delete definition</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/workflows/definitions/{name}/{version}/run</code></td><td>Run stored definition</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/workflows/run</code></td><td>Run inline definition</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/workflows/{id}</code></td><td>Get execution status</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/workflows/{id}/retry</code></td><td>Retry failed execution</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/workflows/{id}/wake</code></td><td>Wake a sleeping execution early</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/workflows/{id}/node/{nodeId}/callback</code></td><td>Deliver async callback to a waiting node</td></tr>
             <tr><td><span class="method get">GET</span></td><td><code>/metrics</code></td><td>Prometheus metrics</td></tr>
           </tbody>
         </table>
@@ -141,7 +141,7 @@
         <div id="openapiSchemaDocs"></div>
 
         <h3 id="examples">Examples</h3>
-        <div class="codeblock"><pre id="run-inline"><code>curl -X POST http://localhost:8080/sagas/run \
+        <div class="codeblock"><pre id="run-inline"><code>curl -X POST http://localhost:8080/workflows/run \
   -H 'Content-Type: application/json' \
   -d '{"definition": { ... }, "payload": {"orderId": "123"}}'</code></pre></div>
         <button class="btn ghost" data-copy="#run-inline">Copy</button>

@@ -156,7 +156,7 @@ function initWalkthrough() {
       primary: {
         type: "http",
         method: "POST",
-        path: "/sagas/definitions",
+        path: "/workflows/definitions",
         headers: ["Content-Type: application/json"],
         body: definitionRequest
       },
@@ -173,7 +173,7 @@ function initWalkthrough() {
       primary: {
         type: "http",
         method: "POST",
-        path: "/sagas/definitions/checkout/v1/run",
+        path: "/workflows/definitions/checkout/v1/run",
         headers: ["Content-Type: application/json"],
         body: {
           payload: {
@@ -271,7 +271,7 @@ function initWalkthrough() {
       primary: {
         type: "http",
         method: "GET",
-        path: `/sagas/${executionId}`
+        path: `/workflows/${executionId}`
       },
       secondary: {
         label: "Response",
@@ -323,7 +323,7 @@ function initWalkthrough() {
       primary: {
         type: "http",
         method: "GET",
-        path: `/sagas/${executionId}`
+        path: `/workflows/${executionId}`
       },
       secondary: {
         label: "Response",
