@@ -88,7 +88,7 @@
           <li><code>Application</code>: REST endpoints, callback receiver, and runtime bootstrap.</li>
           <li><code>RuntimeBootstrap</code>: wires queue, consumer, processor, store, and observability.</li>
           <li><code>SagaExecutionProcessor</code>: worker orchestration, ack/retry control, and rate-limit integration.</li>
-          <li><code>WorkflowExecutor</code>: node dispatch, retry policy decisions, compensation transitions. Delegates to <code>TaskNodeHandler</code> (sync and async HTTP) and <code>SwitchNodeHandler</code> (JSON Logic branching).</li>
+          <li><code>WorkflowExecutor</code>: node dispatch, retry policy decisions, compensation transitions. Delegates to <code>TaskNodeHandler</code> (sync and async HTTP) and <code>SwitchNodeHandler</code> (JSON Logic branching). Split nodes are handled directly: each branch becomes an independent sub-execution enqueued through the same pipeline, and a join node barriers on all of them reaching a terminal state before the parent continues.</li>
           <li><code>CallbackReceiver</code>: validates HMAC-signed callback tokens and re-enqueues async executions to resume.</li>
           <li><code>SagaExecutionStore</code>: persistence abstraction (Redis/Postgres backing).</li>
         </ul>
@@ -101,6 +101,7 @@
           <li>Executor dispatches each node — sync task nodes make HTTP calls immediately; async task nodes fire a request, pause the execution, and wait for a callback.</li>
           <li>For async nodes: the external service POSTs to the callback endpoint with a signed token. The callback receiver validates the token and re-enqueues the execution to resume from the next node.</li>
           <li>Switch nodes evaluate JSON Logic expressions and route to the matching branch without making any HTTP call.</li>
+          <li>Split nodes spawn one independent sub-execution per branch (each with its own id and retry/compensation lifecycle) and park the parent until its join node observes every branch reaching a terminal state — nesting works the same way at any depth.</li>
           <li>On failure, the executor applies the retry or backoff policy, then drives compensation in reverse order if retries are exhausted.</li>
           <li>Metrics and traces are emitted throughout all stages.</li>
         </ol>

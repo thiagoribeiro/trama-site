@@ -50,7 +50,7 @@
   <body>
     <header class="topbar"><div class="topbar-row"><a class="brand" href="index.html">Trama</a><button class="topbar-menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation"><span></span><span></span><span></span></button><nav class="nav-links" id="site-nav"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="tools.html">Tools</a><a data-nav href="community.html">Community</a><a data-nav href="ui.html">UI</a></nav><div class="actions"><a class="btn ghost" href="https://github.com/thiagoribeiro/trama/blob/main/scripts/saga_demo/README.md">Demo Scripts</a></div></div></header>
     <main class="container doc-layout reveal">
-      <aside class="sidebar"><a href="#create" class="active">Create Definition</a><a href="#robust">Robust Definition</a><a href="#stored">Run Stored Definition</a><a href="#inline">Inline Run</a><a href="#template">Template Usage</a><a href="#v2-switch">Switch Branching</a><a href="#v2-async">Async Callback</a><a href="#v2-sleep">Sleep Pause</a><a href="#load">Demo Scripts</a></aside>
+      <aside class="sidebar"><a href="#create" class="active">Create Definition</a><a href="#robust">Robust Definition</a><a href="#stored">Run Stored Definition</a><a href="#inline">Inline Run</a><a href="#template">Template Usage</a><a href="#v2-switch">Switch Branching</a><a href="#v2-async">Async Callback</a><a href="#v2-sleep">Sleep Pause</a><a href="#v2-split-join">Split / Join</a><a href="#load">Demo Scripts</a></aside>
       <article class="content">
         <div class="page-intro">
           <h1>Examples</h1>
@@ -416,6 +416,60 @@
         <p>The execution status becomes <code>SLEEPING</code> while waiting. To skip the remaining wait and resume immediately:</p>
         <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/&lt;executionId&gt;/wake
 # 202 Accepted — execution re-enqueued at the next node</code></pre></div>
+
+        <h3 id="v2-split-join">Split / Join</h3>
+        <p>A <code>split</code> node fans out into independent branches — each one runs as its own sub-execution with the full retry, compensation, and (if needed) nested split/join pipeline, exactly like a top-level saga. The matching <code>join</code> node waits for every branch to reach a terminal state before continuing. A partial branch failure does not block the barrier or trigger automatic rollback — the join result reports each branch's outcome, and it is up to the workflow to react (route on failure with a switch node, for example).</p>
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/run \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "definition": {
+      "name": "order-fulfillment",
+      "version": "v1",
+      "failureHandling": { "type": "retry", "maxAttempts": 2, "delayMillis": 200 },
+      "entrypoint": "fan-out",
+      "nodes": [
+        {
+          "kind": "split",
+          "id": "fan-out",
+          "branches": ["reserve-stock", "charge-payment"],
+          "join": "fan-in"
+        },
+        {
+          "kind": "task",
+          "id": "reserve-stock",
+          "action": {
+            "mode": "sync",
+            "request": { "url": "http://inventory/reserve", "verb": "POST", "body": { "orderId": "{{payload.orderId}}" } }
+          },
+          "compensation": { "url": "http://inventory/release", "verb": "POST" }
+        },
+        {
+          "kind": "task",
+          "id": "charge-payment",
+          "action": {
+            "mode": "sync",
+            "request": { "url": "http://payments/charge", "verb": "POST", "body": { "orderId": "{{payload.orderId}}" } }
+          },
+          "compensation": { "url": "http://payments/refund", "verb": "POST" }
+        },
+        {
+          "kind": "join",
+          "id": "fan-in",
+          "next": "confirm-order"
+        },
+        {
+          "kind": "task",
+          "id": "confirm-order",
+          "action": {
+            "mode": "sync",
+            "request": { "url": "http://orders/confirm", "verb": "POST" }
+          }
+        }
+      ]
+    },
+    "payload": { "orderId": "ord-321" }
+  }'</code></pre></div>
+        <p>Branches can nest another <code>split</code>/<code>join</code> pair inside them for free — the runtime does not treat top-level and nested splits differently.</p>
 
         <h3 id="load">Demo Scripts</h3>
         <ul>
