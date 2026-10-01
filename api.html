@@ -120,17 +120,23 @@
             <tr><td><span class="method post">POST</span></td><td><code>/workflows/definitions</code></td><td>Create definition</td></tr>
             <tr><td><span class="method get">GET</span></td><td><code>/workflows/definitions</code></td><td>List definitions</td></tr>
             <tr><td><span class="method get">GET</span></td><td><code>/workflows/definitions/{id}</code></td><td>Get definition</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/workflows/definitions/{name}/{version}</code></td><td>Get definition by name and version</td></tr>
             <tr><td><span class="method put">PUT</span></td><td><code>/workflows/definitions/{id}</code></td><td>Insert definition by id</td></tr>
             <tr><td><span class="method delete">DELETE</span></td><td><code>/workflows/definitions/{id}</code></td><td>Delete definition</td></tr>
             <tr><td><span class="method post">POST</span></td><td><code>/workflows/definitions/{name}/{version}/run</code></td><td>Run stored definition</td></tr>
             <tr><td><span class="method post">POST</span></td><td><code>/workflows/run</code></td><td>Run inline definition</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/workflows</code></td><td>List executions (filter by <code>status</code>, <code>name</code>; <code>limit</code>/<code>offset</code>)</td></tr>
             <tr><td><span class="method get">GET</span></td><td><code>/workflows/{id}</code></td><td>Get execution status</td></tr>
-            <tr><td><span class="method post">POST</span></td><td><code>/workflows/{id}/retry</code></td><td>Retry failed execution</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/workflows/{id}/steps</code></td><td>Step results (forward, compensation, callback, switch, split/join) in execution order</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/workflows/{id}/steps/calls</code></td><td>Outbound HTTP calls, one per attempt, with rendered request and response</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/workflows/{id}/retry</code></td><td>Retry a <code>FAILED</code> execution</td></tr>
             <tr><td><span class="method post">POST</span></td><td><code>/workflows/{id}/wake</code></td><td>Wake a sleeping execution early</td></tr>
-            <tr><td><span class="method post">POST</span></td><td><code>/workflows/{id}/node/{nodeId}/callback</code></td><td>Deliver async callback to a waiting node</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/workflows/{executionId}/node/{nodeId}/callback</code></td><td>Deliver async callback to a waiting node</td></tr>
             <tr><td><span class="method get">GET</span></td><td><code>/metrics</code></td><td>Prometheus metrics</td></tr>
           </tbody>
         </table>
+        <p><strong>Retry</strong> only accepts executions in <code>FAILED</code> status (anything else returns <code>409</code>). It re-runs the saga from the first step with its original payload; steps completed before the failure were already compensated. Retrying v2 node-graph executions is not supported yet (<code>422</code>).</p>
+        <p><strong>Wake</strong> returns <code>202</code> when it cuts a sleep short, <code>200</code> if a wake-up is already under way, and <code>409</code> when the execution is not sleeping.</p>
 
         <h3 id="endpoint-details">Endpoint Details (from OpenAPI)</h3>
         <p class="muted">Rendered live from <code>openapi.json</code>, including request/response schema references.</p>

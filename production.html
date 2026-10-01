@@ -57,6 +57,7 @@
         <a href="#resilience">Resilience</a>
         <a href="#security">Security</a>
         <a href="#operations">Operations</a>
+        <a href="#upgrading">Upgrading</a>
       </aside>
       <article class="content">
         <div class="page-intro">
@@ -109,6 +110,7 @@
     refreshIntervalMillis: 2000
     claimerCount: 4</code></pre></div>
         <p>During shutdown, a worker marks itself as not ready, stops claiming new Redis queue work, unregisters from shard membership, and drains already-claimed executions before closing Redis. That lets another worker take ownership without abandoning in-flight items.</p>
+        <p>While a worker is processing an execution it keeps renewing its claim (every third of <code>redis.consumer.processingTimeoutMillis</code>, 20 s by default), so slow but healthy executions are never handed to a second worker. If a pod dies without draining, its renewals stop: once the lease expires, the shard's current owner moves that work back to the ready queue on its next claim pass, so recovery takes roughly the lease length.</p>
 
         <h3 id="scaling">Scaling Guidelines</h3>
         <ul>
@@ -121,9 +123,10 @@
         <h3 id="resilience">Resilience Playbook</h3>
         <ul>
           <li>Alert on failure ratio and queue pressure.</li>
-          <li>Use retry endpoint for recoverable failed executions.</li>
+          <li>Use <code>POST /workflows/{id}/retry</code> for recoverable failures. It only accepts <code>FAILED</code> executions (<code>409</code> otherwise) and re-runs them from the first step with the original payload.</li>
           <li>Keep clear runbooks for Redis/Postgres outages.</li>
-          <li>Document what happens when Redis membership becomes stale or a worker loses shard ownership.</li>
+          <li>When a worker stops heartbeating, its membership entry expires after <code>redis.sharding.membershipTtlMillis</code> and its shards are reassigned on the next refresh; work it had claimed returns to the queue once its lease expires.</li>
+          <li>Watch for <code>claims expired before renewal</code> in worker logs: a pod stalled long enough (GC pause, Redis outage) for a claim to expire, so that execution may run twice. Delivery is at-least-once, so keep task endpoints idempotent.</li>
         </ul>
 
         <h3 id="security">Security Checklist</h3>
@@ -146,6 +149,15 @@
             <tr><td>Tracing</td><td>OTEL exporter healthy and sampled correctly.</td></tr>
           </tbody>
         </table>
+
+        <h3 id="upgrading">Upgrading</h3>
+        <p>Read the <a href="https://github.com/thiagoribeiro/trama/blob/main/CHANGELOG.md">changelog</a> before upgrading. Notes for <strong>1.x → 2.x</strong>:</p>
+        <ul>
+          <li>The HTTP API moved from <code>/sagas/*</code> to <code>/workflows/*</code>, including the async callback URL (services that use <code>{{runtime.callback.url}}</code> need no change).</li>
+          <li>The shard → pod mapping changed in 2.0.0. During a rolling deploy with mixed versions a shard can briefly have no owner, so prefer a quick rollout or a recreate strategy for that upgrade.</li>
+          <li>Liquibase adds the nullable <code>saga_execution.payload</code> column on startup; no manual migration is needed.</li>
+          <li><code>redis.consumer.requeueIntervalMillis</code> is ignored and <code>processingTimeoutMillis</code> now defaults to 20000.</li>
+        </ul>
       </article>
     </main>
     <footer class="container footer"><span>Production docs</span><div><a href="https://github.com/thiagoribeiro/trama/blob/main/grafana/trama-saga-dashboard.json">Grafana Dashboard</a></div></footer>

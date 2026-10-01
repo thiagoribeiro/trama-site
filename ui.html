@@ -77,7 +77,7 @@
 
         <h3 id="overview">Overview</h3>
         <p>
-          The management UI is available at <code>http://localhost:8000</code> when running via Docker Compose.
+          The management UI is available at <code>http://localhost:9000</code> when running via Docker Compose.
           It is served by a lightweight Python BFF (<code>ui/bff/</code>) that proxies the Ktor API
           and serves the Vue 3 single-page application.
         </p>
@@ -118,7 +118,7 @@
             </tr>
             <tr>
               <td><strong>Graph Editor</strong></td>
-              <td>Visual node-graph editor for creating v2 definitions. Drag task and switch nodes, connect them with edges, configure via sidebar panel. Export or save directly to the API.</td>
+              <td>Visual node-graph editor for creating v2 definitions. Drag task, switch, sleep, split and join nodes, connect them with edges, configure via sidebar panel. Export or save directly to the API.</td>
             </tr>
           </tbody>
         </table>
@@ -132,16 +132,16 @@
         </ul>
         <p>
           The browser talks only to the BFF (<code>:8000</code>). The BFF forwards <code>/api/*</code>
-          requests to the Ktor orchestrator (<code>:8080</code>). This layer exists to support future
+          requests to the Ktor orchestrator (<code>:9080</code> under Docker Compose). This layer exists to support future
           authentication and response aggregation without touching the core API.
         </p>
 
         <h3 id="running">Running locally</h3>
         <p>Start the full stack with Docker Compose:</p>
         <div class="codeblock"><pre><code>docker compose up --build</code></pre></div>
-        <p>Then open <a href="http://localhost:8000" target="_blank" rel="noopener">http://localhost:8000</a>.</p>
+        <p>Then open <a href="http://localhost:9000" target="_blank" rel="noopener">http://localhost:9000</a>.</p>
         <p>
-          The Ktor API remains available directly at <code>http://localhost:8080</code> for programmatic
+          The Ktor API remains available directly at <code>http://localhost:9080</code> for programmatic
           access and automation.
         </p>
       </article>

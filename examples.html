@@ -50,7 +50,7 @@
   <body>
     <header class="topbar"><div class="topbar-row"><a class="brand" href="index.html">Trama</a><button class="topbar-menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation"><span></span><span></span><span></span></button><nav class="nav-links" id="site-nav"><a data-nav href="index.html">Home</a><a data-nav href="architecture.html">Architecture</a><a data-nav href="install.html">Install</a><a data-nav href="configuration.html">Configuration</a><a data-nav href="production.html">Production</a><a data-nav href="api.html">API</a><a data-nav href="observability.html">Observability</a><a data-nav href="examples.html">Examples</a><a data-nav href="tools.html">Tools</a><a data-nav href="community.html">Community</a><a data-nav href="ui.html">UI</a></nav><div class="actions"><a class="btn ghost" href="https://github.com/thiagoribeiro/trama/blob/main/scripts/saga_demo/README.md">Demo Scripts</a></div></div></header>
     <main class="container doc-layout reveal">
-      <aside class="sidebar"><a href="#create" class="active">Create Definition</a><a href="#robust">Robust Definition</a><a href="#stored">Run Stored Definition</a><a href="#inline">Inline Run</a><a href="#template">Template Usage</a><a href="#v2-switch">Switch Branching</a><a href="#v2-async">Async Callback</a><a href="#v2-sleep">Sleep Pause</a><a href="#v2-split-join">Split / Join</a><a href="#load">Demo Scripts</a></aside>
+      <aside class="sidebar"><a href="#create" class="active">Create Definition</a><a href="#robust">Robust Definition</a><a href="#stored">Run Stored Definition</a><a href="#inline">Inline Run</a><a href="#template">Templates</a><a href="#v2-switch">Switch Branching</a><a href="#v2-async">Async Callback</a><a href="#v2-sleep">Sleep Pause</a><a href="#v2-split-join">Split / Join</a><a href="#load">Demo Scripts</a></aside>
       <article class="content">
         <div class="page-intro">
           <h1>Examples</h1>
@@ -136,7 +136,7 @@
           },
           "body": {
             "orderId": "{{payload.orderId}}",
-            "items": "{{payload.items}}"
+            "customerId": "{{payload.customerId}}"
           },
           "successStatusCodes": [200, 201, 202]
         }
@@ -250,17 +250,37 @@
     "payload": {}
   }'</code></pre></div>
 
-        <h3 id="template">Template Example</h3>
+        <h3 id="template">Templates</h3>
+        <p>URLs, headers and bodies are <a href="https://mustache.github.io/">Mustache</a> templates. Available variables:</p>
+        <ul>
+          <li><code>payload.*</code> (alias <code>input.*</code>): the run payload.</li>
+          <li><code>nodes.&lt;id&gt;.response.body.*</code>: the response of an earlier node; <code>prev.body.*</code> is the previous node's.</li>
+          <li><code>step.&lt;name or index&gt;.body.*</code>, <code>sagaId</code>, <code>sagaName</code>, <code>sagaVersion</code>.</li>
+          <li><code>runtime.callback.url</code> / <code>runtime.callback.token</code> in async task requests.</li>
+        </ul>
         <div class="codeblock"><pre><code>{
   "url": "http://service/charge?reservation={{nodes.reserve-inventory.response.body.id}}",
   "verb": "POST",
+  "headers": { "Content-Type": "application/json", "X-Tenant": "{{payload.tenant}}" },
   "body": {
-    "amount": "{{payload.amount}}"
+    "amount": "{{payload.amount}}",
+    "note": "{{payload.note}}"
   }
 }</code></pre></div>
+        <p><code>{{ }}</code> escapes values for where they land, so a value such as <code>O'Brien "Co" \path</code> or one with a line break reaches the service intact:</p>
+        <table>
+          <thead><tr><th>Where</th><th><code>{{ }}</code> inserts</th></tr></thead>
+          <tbody>
+            <tr><td>JSON body (<code>Content-Type</code> contains <code>json</code>, or no <code>Content-Type</code> and the body starts with <code>{</code> / <code>[</code>)</td><td>JSON string escaping</td></tr>
+            <tr><td>XML / HTML body</td><td>entity escaping</td></tr>
+            <tr><td><code>application/x-www-form-urlencoded</code> body</td><td>form encoding</td></tr>
+            <tr><td>URL, headers, any other body</td><td>the literal value (line breaks are removed from headers)</td></tr>
+          </tbody>
+        </table>
+        <p>Use <code>{{{ }}}</code> to insert a raw value anywhere. Values are scalars: an object or array renders as text, not as JSON.</p>
 
         <h3 id="v2-switch">Switch Branching</h3>
-        <p>Run an inline saga that routes to a different payment node based on <code>paymentMethod</code>. The <code>choose-payment</code> switch node evaluates a JSON Logic expression against the input payload and dispatches to <code>pix-payment</code>, <code>card-payment</code>, or a fallback.</p>
+        <p>Run an inline saga that routes to a different payment node based on <code>paymentMethod</code>. The <code>choose-payment</code> switch node evaluates a JSON Logic expression against the payload (available as <code>payload</code> or its alias <code>input</code>, alongside <code>nodes</code>, <code>prev</code> and <code>step</code>) and dispatches to <code>pix-payment</code>, <code>card-payment</code>, or a fallback.</p>
         <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/run \
   -H 'Content-Type: application/json' \
   -d '{
@@ -276,12 +296,12 @@
           "cases": [
             {
               "name": "pix",
-              "when": { "==": [{ "var": "input.paymentMethod" }, "pix"] },
+              "when": { "==": [{ "var": "payload.paymentMethod" }, "pix"] },
               "target": "pix-payment"
             },
             {
               "name": "card",
-              "when": { "==": [{ "var": "input.paymentMethod" }, "card"] },
+              "when": { "==": [{ "var": "payload.paymentMethod" }, "card"] },
               "target": "card-payment"
             }
           ],
@@ -374,6 +394,12 @@
   -H 'Content-Type: application/json' \
   -H 'X-Callback-Token: &lt;token&gt;' \
   -d '{ "status": "authorized", "authCode": "AUTH-001" }'</code></pre></div>
+        <p>By default any accepted callback resumes the workflow. To decide from the callback body, add JSON Logic conditions to the <code>callback</code> block; they see <code>callback.body</code> and the payload (<code>payload</code> / <code>input</code>). A callback matching <code>failureWhen</code>, or not matching <code>successWhen</code>, fails the node: it is retried per <code>failureHandling</code> (the async request is sent again) and compensated once retries are exhausted:</p>
+        <div class="codeblock"><pre><code>"callback": {
+  "timeoutMillis": 30000,
+  "successWhen": { "==": [{ "var": "callback.body.status" }, "authorized"] },
+  "failureWhen": { "==": [{ "var": "callback.body.status" }, "declined"] }
+}</code></pre></div>
 
         <h3 id="v2-sleep">Sleep Pause</h3>
         <p>A <code>sleep</code> node pauses the workflow for a configurable duration before advancing to the next node. Use it for time-based orchestration — e.g., wait 24 hours before sending a follow-up notification, or introduce a cooling-off period between steps.</p>

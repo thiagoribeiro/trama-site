@@ -74,12 +74,13 @@
 
         <h3 id="docker">Quick Start with Docker</h3>
         <div class="codeblock"><pre><code>docker compose up --build</code></pre></div>
-        <p>API should be reachable at <code>http://localhost:8080</code>. This is the recommended first path for evaluation.</p>
+        <p>This starts Postgres, Redis, the orchestrator and the management UI. The API is reachable at <code>http://localhost:9080</code> and the UI at <code>http://localhost:9000</code>. This is the recommended first path for evaluation.</p>
 
         <h3 id="verify">Verification Checklist</h3>
-        <div class="codeblock"><pre><code>curl http://localhost:8080/healthz
-curl http://localhost:8080/readyz
-curl http://localhost:8080/metrics</code></pre></div>
+        <div class="codeblock"><pre><code>curl http://localhost:9080/healthz
+curl http://localhost:9080/readyz
+curl http://localhost:9080/metrics</code></pre></div>
+        <p class="muted">Use port <code>8080</code> instead when running with <code>./gradlew run</code>; the examples on this site use 8080.</p>
 
         <h3 id="prereq">Prerequisites</h3>
         <ul>
@@ -91,7 +92,7 @@ curl http://localhost:8080/metrics</code></pre></div>
 
         <h3 id="local">Run Locally</h3>
         <div class="codeblock"><pre><code>./gradlew run</code></pre></div>
-        <p>Use <code>src/main/resources/application.yaml</code> or env vars to configure dependencies.</p>
+        <p>The API listens on <code>http://localhost:8080</code>. Configure Postgres, Redis and the runtime in <code>app/main/resources/application.yaml</code> or through <a href="configuration.html#env">environment overrides</a>.</p>
       </article>
     </main>
     <footer class="container footer"><span>Install docs</span><div><a href="https://github.com/thiagoribeiro/trama/blob/main/README.md">README</a></div></footer>

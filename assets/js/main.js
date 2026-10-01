@@ -167,7 +167,7 @@ function initWalkthrough() {
     },
     {
       tone: "neutral",
-      status: "RUNNING",
+      status: "IN_PROGRESS",
       currentStep: "choose-payment",
       label: "Request",
       primary: {
@@ -196,7 +196,7 @@ function initWalkthrough() {
     },
     {
       tone: "neutral",
-      status: "RUNNING",
+      status: "IN_PROGRESS",
       currentStep: "pix-payment",
       label: "Runtime block",
       primary: {
@@ -216,7 +216,7 @@ function initWalkthrough() {
     },
     {
       tone: "neutral",
-      status: "RUNNING",
+      status: "IN_PROGRESS",
       currentStep: "pix-payment",
       label: "Runtime block",
       primary: {
@@ -243,7 +243,7 @@ function initWalkthrough() {
     },
     {
       tone: "neutral",
-      status: "RUNNING",
+      status: "IN_PROGRESS",
       currentStep: "pix-payment",
       label: "Runtime block",
       primary: {
@@ -265,7 +265,7 @@ function initWalkthrough() {
     },
     {
       tone: "api",
-      status: "WAITING",
+      status: "WAITING_CALLBACK",
       currentStep: "pix-payment",
       label: "Request",
       primary: {
@@ -280,18 +280,19 @@ function initWalkthrough() {
           id: executionId,
           name: "checkout",
           version: "v1",
-          status: "WAITING",
-          currentStep: "pix-payment"
+          status: "WAITING_CALLBACK",
+          startedAt: "2026-03-16T14:10:00Z",
+          updatedAt: "2026-03-16T14:10:12Z"
         }
       },
-      logs: ["execution persisted", "status: WAITING", "execution paused on pix-payment"],
+      logs: ["execution persisted", "status: WAITING_CALLBACK", "execution paused on pix-payment"],
       badges: ["waiting", "inspectable"],
       timeline: ["completed", "completed", "completed", "completed", "completed", "active", "idle", "idle"],
       activePill: 5
     },
     {
       tone: "success",
-      status: "RUNNING",
+      status: "IN_PROGRESS",
       currentStep: "create-shipment",
       label: "Request",
       primary: {
@@ -317,7 +318,7 @@ function initWalkthrough() {
     },
     {
       tone: "success",
-      status: "COMPLETED",
+      status: "SUCCEEDED",
       currentStep: "none",
       label: "Request",
       primary: {
@@ -332,7 +333,7 @@ function initWalkthrough() {
           id: executionId,
           name: "checkout",
           version: "v1",
-          status: "COMPLETED",
+          status: "SUCCEEDED",
           startedAt: "2026-03-16T14:10:00Z",
           updatedAt: "2026-03-16T14:10:45Z"
         }

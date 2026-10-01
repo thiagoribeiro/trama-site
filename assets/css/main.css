@@ -735,7 +735,7 @@ section h2 {
   color: #9ed8ff;
 }
 
-.walkthrough-meta-status[data-status="RUNNING"] code {
+.walkthrough-meta-status[data-status="IN_PROGRESS"] code {
   color: #7ef0be;
 }
 
