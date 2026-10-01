@@ -101,8 +101,8 @@
             <tr><td><code>redis.cluster.nodes</code></td><td><code>[]</code></td><td>Seed nodes used when <code>redis.topology=CLUSTER</code>.</td></tr>
             <tr><td><code>redis.queue.keyPrefix</code></td><td><code>saga:executions</code></td><td>Prefix for shard-aware ready and in-flight queue keys.</td></tr>
             <tr><td><code>redis.consumer.batchSize</code></td><td><code>50</code></td><td>Messages claimed per poll cycle.</td></tr>
-            <tr><td><code>redis.consumer.processingTimeoutMillis</code></td><td><code>60000</code></td><td>In-flight lease timeout before a message is requeued.</td></tr>
-            <tr><td><code>redis.consumer.requeueIntervalMillis</code></td><td><code>5000</code></td><td>How often expired in-flight messages are recovered.</td></tr>
+            <tr><td><code>redis.consumer.processingTimeoutMillis</code></td><td><code>20000</code></td><td>In-flight claim lease. Workers renew the claims they are still processing every third of it, so it only bounds how long work claimed by a pod that died waits before being re-delivered.</td></tr>
+            <tr><td><code>redis.consumer.requeueIntervalMillis</code></td><td><em>ignored</em></td><td>Deprecated since 2.0.0: expired claims are recovered by the regular claim pass.</td></tr>
             <tr><td><code>redis.sharding.virtualShardCount</code></td><td><code>1024</code></td><td>Virtual shard fan-out used by rendezvous allocation.</td></tr>
             <tr><td><code>redis.sharding.membershipKey</code></td><td><code>saga:runtime:pods</code></td><td>Redis ZSET tracking live worker pods.</td></tr>
             <tr><td><code>redis.sharding.membershipTtlMillis</code></td><td><code>10000</code></td><td>Worker membership entry TTL.</td></tr>
@@ -111,13 +111,15 @@
             <tr><td><code>redis.sharding.claimerCount</code></td><td><code>4</code></td><td>Parallel shard claimers per worker process.</td></tr>
 
             <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">DATABASE</td></tr>
-            <tr><td><code>database.host</code></td><td><code>db</code></td><td>Postgres host. Used when <code>runtime.store=POSTGRES</code>.</td></tr>
+            <tr><td><code>database.host</code></td><td><code>db</code></td><td>Postgres host. Postgres is always required: it stores definitions, execution status and step history (<code>runtime.store</code> only selects where hot execution state lives).</td></tr>
             <tr><td><code>database.port</code></td><td><code>5432</code></td><td>Postgres port.</td></tr>
             <tr><td><code>database.database</code></td><td><code>saga</code></td><td>Postgres database name.</td></tr>
             <tr><td><code>database.user</code></td><td><code>saga</code></td><td>Postgres user.</td></tr>
             <tr><td><code>database.password</code></td><td><code>saga</code></td><td>Postgres password.</td></tr>
             <tr><td><code>database.pool.maxPoolSize</code></td><td><code>10</code></td><td>Maximum JDBC connection pool size.</td></tr>
             <tr><td><code>database.pool.minIdle</code></td><td><code>1</code></td><td>Minimum idle JDBC connections.</td></tr>
+            <tr><td><code>database.pool.definitionCacheMaxSize</code></td><td><code>1000</code></td><td>Stored definitions cached per pod.</td></tr>
+            <tr><td><code>database.pool.definitionCacheTtlMillis</code></td><td><code>5000</code></td><td>How long a pod may keep serving a cached definition (e.g. one deleted through another pod). <code>0</code> disables the cache.</td></tr>
 
             <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">HTTP CLIENT</td></tr>
             <tr><td><code>http.connectTimeoutMillis</code></td><td><code>10000</code></td><td>Outbound HTTP connect timeout for workflow task requests.</td></tr>
@@ -135,7 +137,7 @@
             <tr><td><code>maintenance.enabled</code></td><td><code>true</code></td><td>Enable the background partition maintenance job (Postgres only).</td></tr>
             <tr><td><code>maintenance.partitionLookaheadMonths</code></td><td><code>13</code></td><td>How many months ahead to pre-create Postgres partitions.</td></tr>
             <tr><td><code>maintenance.partitionStartOffsetMonths</code></td><td><code>1</code></td><td>How many months back to start partition creation.</td></tr>
-            <tr><td><code>maintenance.retentionDays</code></td><td><code>15</code></td><td>Days of execution history to retain before purging.</td></tr>
+            <tr><td><code>maintenance.retentionDays</code></td><td><code>15</code></td><td>Days of execution history to retain before purging (executions, step results and step calls).</td></tr>
             <tr><td><code>maintenance.intervalMillis</code></td><td><code>3600000</code></td><td>How often the maintenance job runs (1 hour default).</td></tr>
 
             <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">METRICS &amp; TELEMETRY</td></tr>
@@ -174,8 +176,7 @@
     keyPrefix: "saga:executions"
   consumer:
     batchSize: 100
-    processingTimeoutMillis: 60000
-    requeueIntervalMillis: 5000
+    processingTimeoutMillis: 20000
   sharding:
     podId: "${HOSTNAME}"
     virtualShardCount: 1024
@@ -188,16 +189,23 @@
         <h3 id="env">Environment Overrides</h3>
         <p>Supported overrides include:</p>
         <div class="codeblock"><pre><code>RUNTIME_ENABLED
+RUNTIME_EMPTYPOLLDELAYMILLIS
+RUNTIME_CALLBACK_BASEURL
+RUNTIME_CALLBACK_HMACSECRET
+RUNTIME_CALLBACK_HMACKID
 METRICS_ENABLED
 TELEMETRY_ENABLED
 REDIS_URL
-REDIS_TOPOLOGY
-REDIS_CLUSTER_NODES
+REDIS_TOPOLOGY            # STANDALONE | CLUSTER (since 2.0.1)
+REDIS_CLUSTER_NODES       # comma-separated seed nodes (since 2.0.1)
+REDIS_SHARDING_VIRTUALSHARDCOUNT
 DATABASE_HOST
 DATABASE_PORT
 DATABASE_DATABASE
 DATABASE_USER
-DATABASE_PASSWORD</code></pre></div>
+DATABASE_PASSWORD
+DATABASE_POOL_DEFINITIONCACHETTLMILLIS</code></pre></div>
+        <p>Each override can also be passed as a JVM system property with the dotted key (e.g. <code>-Dredis.topology=CLUSTER</code>). Any other key can be overridden with Hoplite's <code>-Dconfig.override.&lt;key&gt;=&lt;value&gt;</code> system properties.</p>
 
         <h3 id="profiles">Profiles</h3>
         <h4>Dev profile</h4>
@@ -232,7 +240,7 @@ database:
 redis:
   consumer:
     batchSize: 100
-    processingTimeoutMillis: 60000
+    processingTimeoutMillis: 20000
 rateLimit:
   enabled: true
 metrics:
@@ -254,8 +262,7 @@ redis:
       - "redis://redis-cluster-2.redis:6379"
   consumer:
     batchSize: 100
-    processingTimeoutMillis: 60000
-    requeueIntervalMillis: 5000
+    processingTimeoutMillis: 20000
   sharding:
     podId: "${HOSTNAME}"
     virtualShardCount: 1024

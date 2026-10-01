@@ -91,12 +91,14 @@
             <tr><td><code>saga_redis_owned_shards</code></td><td>Gauge</td><td>Virtual shards currently assigned to this worker.</td></tr>
             <tr><td><code>saga_redis_membership_refresh_age_ms</code></td><td>Gauge</td><td>Age of the last successful membership refresh.</td></tr>
             <tr><td><code>saga_duration_seconds</code></td><td>Histogram</td><td>End-to-end duration</td></tr>
-            <tr><td><code>saga_step_duration_success_seconds</code></td><td>Histogram</td><td>Successful step duration (v1)</td></tr>
-            <tr><td><code>saga_node_duration_seconds</code></td><td>Histogram</td><td>Per-node execution duration (v2)</td></tr>
+            <tr><td><code>saga_step_duration_success_seconds</code></td><td>Histogram</td><td>Duration of successful task HTTP calls, by <code>step_name</code></td></tr>
+            <tr><td><code>saga_node_duration_seconds</code></td><td>Histogram</td><td>Per-node dispatch duration: the HTTP call for tasks (until accepted for async), condition evaluation for switches, parking for sleeps, fan-out for splits (since 2.0.1)</td></tr>
             <tr><td><code>saga_callback_received_total</code></td><td>Counter</td><td>Async callbacks delivered to the orchestrator</td></tr>
             <tr><td><code>saga_callback_rejected_total</code></td><td>Counter</td><td>Async callbacks rejected (expired, bad signature, replay, attempt mismatch)</td></tr>
             <tr><td><code>saga_callback_timeout_total</code></td><td>Counter</td><td>Async tasks that timed out waiting for a callback</td></tr>
-            <tr><td><code>saga_switch_evaluations_total</code></td><td>Counter</td><td>Switch node evaluations</td></tr>
+            <tr><td><code>saga_callback_wait_entered_total</code></td><td>Counter</td><td>Async tasks that started waiting for a callback</td></tr>
+            <tr><td><code>saga_callback_timeout_scan_requeued_total</code></td><td>Counter</td><td>Timed-out waits re-enqueued by the callback timeout scanner</td></tr>
+            <tr><td><code>saga_switch_evaluated_total</code></td><td>Counter</td><td>Switch node evaluations</td></tr>
           </tbody>
         </table>
         <p>The Redis cluster rollout adds worker-coordination metrics so you can observe shard ownership, claim pressure, and membership freshness without inspecting Redis directly.</p>
@@ -105,9 +107,10 @@
         <ul>
           <li><code>saga_name</code>, <code>saga_version</code> on counters and histograms.</li>
           <li><code>phase</code> on queue and processing counters.</li>
-          <li><code>outcome</code> on processed, <code>reason</code> on failed and callback-rejected counters.</li>
-          <li><code>node_kind</code> (<code>task</code> | <code>switch</code>) and <code>mode</code> (<code>sync</code> | <code>async</code>) on <code>saga_node_duration_seconds</code>.</li>
-          <li><code>result</code> (<code>case</code> | <code>default</code>) on <code>saga_switch_evaluations_total</code>.</li>
+          <li><code>outcome</code> on processed, <code>reason</code> on failed and callback-rejected counters, <code>result</code> on callback-received.</li>
+          <li><code>final_status</code> on <code>saga_duration_seconds</code>.</li>
+          <li><code>node_kind</code> (<code>task</code> | <code>switch</code> | <code>sleep</code> | <code>split</code>) and <code>mode</code> (<code>sync</code> | <code>async</code> for tasks, <code>none</code> otherwise) on <code>saga_node_duration_seconds</code>.</li>
+          <li><code>result</code> (<code>case</code> | <code>default</code>) on <code>saga_switch_evaluated_total</code>.</li>
           <li>Redis membership gauges are process-level metrics and do not add definition labels.</li>
         </ul>
 
@@ -123,6 +126,7 @@
           <li><code>saga_redis_membership_refresh_age_ms</code> above membership TTL.</li>
           <li><code>saga_redis_active_pods</code> dropping unexpectedly during rollout.</li>
           <li><code>saga_redis_owned_shards</code> equal to <code>0</code> on a worker pod that should be active.</li>
+          <li>Worker log <code>claims expired before renewal</code>: a pod stalled past its claim lease, so an execution may be re-delivered.</li>
         </ul>
 
         <h3 id="tracing">Tracing</h3>

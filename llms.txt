@@ -14,12 +14,16 @@ Primary documentation:
 - API reference: https://trama.run/api.html
 - Observability: https://trama.run/observability.html
 - Examples: https://trama.run/examples.html
+- Tools (CLI validator): https://trama.run/tools.html
+- Management UI: https://trama.run/ui.html
 - Community: https://trama.run/community.html
 
 API and source artifacts:
 - OpenAPI: https://github.com/thiagoribeiro/trama/blob/main/openapi.json
 - README: https://github.com/thiagoribeiro/trama/blob/main/README.md
 - Grafana dashboard: https://github.com/thiagoribeiro/trama/blob/main/grafana/trama-saga-dashboard.json
+- Changelog: https://github.com/thiagoribeiro/trama/blob/main/CHANGELOG.md
+- Releases: https://github.com/thiagoribeiro/trama/releases
 
 Notes:
 - This site is public documentation for Trama.
