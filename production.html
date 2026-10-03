@@ -103,7 +103,7 @@
       - "redis://redis-cluster-2.redis:6379"
   sharding:
     podId: "${HOSTNAME}"
-    virtualShardCount: 1024
+    virtualShardCount: 64
     membershipKey: "saga:runtime:pods"
     membershipTtlMillis: 10000
     heartbeatIntervalMillis: 3000
@@ -157,6 +157,7 @@
 
         <h3 id="upgrading">Upgrading</h3>
         <p>Read the <a href="https://github.com/thiagoribeiro/trama/blob/main/CHANGELOG.md">changelog</a> before upgrading.</p>
+        <p>Notes for <strong>2.3</strong>: <code>redis.sharding.virtualShardCount</code> defaults to 64 (was 1024). During a rolling deploy, pods on the old count keep claiming shards 64–1023 until they are replaced, and upgraded pods then move what is left. Set <code>REDIS_SHARDING_VIRTUALSHARDCOUNT=1024</code> to keep the old count.</p>
         <p>Notes for <strong>2.0.x → 2.1 / 2.2</strong>:</p>
         <ul>
           <li><strong>Rolling upgrades are supported.</strong> Liquibase adds the checkpoint columns on startup (additive changeset <code>009</code>), and executions started by 2.0.x continue under the new version.</li>
