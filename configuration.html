@@ -82,12 +82,15 @@
           <thead><tr><th>Key</th><th>Default</th><th>Purpose</th></tr></thead>
           <tbody>
             <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">RUNTIME</td></tr>
-            <tr><td><code>runtime.enabled</code></td><td><code>true</code></td><td>Enable queue workers on this instance.</td></tr>
-            <tr><td><code>runtime.workerCount</code></td><td><code>4</code></td><td>Number of concurrent worker coroutines.</td></tr>
-            <tr><td><code>runtime.bufferSize</code></td><td><code>200</code></td><td>Internal dispatch channel buffer size.</td></tr>
-            <tr><td><code>runtime.emptyPollDelayMillis</code></td><td><code>50</code></td><td>Delay between polls when the queue is empty.</td></tr>
+            <tr><td><code>runtime.enabled</code></td><td><code>true</code></td><td>Run queue workers on this instance. With <code>false</code> the instance only serves the API (runs, callbacks, queries) and leaves execution to worker pods.</td></tr>
+            <tr><td><code>runtime.workerCount</code></td><td><code>32</code></td><td>Executions a process runs at once. Workers are coroutines that mostly wait on HTTP, so this is a concurrency limit, not a thread count; it also bounds the concurrent calls a process makes to downstream services. Default <code>4</code> before 2.2.0.</td></tr>
+            <tr><td><code>runtime.prefetch</code></td><td><em>workerCount</em></td><td>Executions claimed ahead of a free worker. A process holds at most <code>workerCount + prefetch</code> claims. Since 2.1.0.</td></tr>
+            <tr><td><code>runtime.bufferSize</code></td><td><em>ignored</em></td><td>Deprecated since 2.1.0: claims are bounded by <code>workerCount + prefetch</code>.</td></tr>
+            <tr><td><code>runtime.emptyPollDelayMillis</code></td><td><code>50</code></td><td>Delay between polls of the due-work index when nothing is due.</td></tr>
+            <tr><td><code>runtime.fullSweepIntervalMillis</code></td><td><code>5000</code></td><td>How often claimers also visit every owned shard, as a safety net for the due-work index. Since 2.1.0.</td></tr>
+            <tr><td><code>runtime.livenessStallMillis</code></td><td><code>120000</code></td><td><code>/healthz</code> fails after this long without consumer progress. Since 2.1.0.</td></tr>
             <tr><td><code>runtime.maxStepsPerExecution</code></td><td><code>25</code></td><td>Maximum nodes processed per worker cycle before re-enqueue.</td></tr>
-            <tr><td><code>runtime.store</code></td><td><code>REDIS</code></td><td>Execution state backend: <code>REDIS</code> or <code>POSTGRES</code>.</td></tr>
+            <tr><td><code>runtime.store</code></td><td><code>REDIS</code></td><td><code>REDIS</code> or <code>POSTGRES</code>. Since 2.1.0 execution state is always in Postgres; <code>REDIS</code> only adds fast callback replay protection.</td></tr>
             <tr><td><code>runtime.callback.baseUrl</code></td><td><code>""</code></td><td>Public base URL injected as <code>&#123;&#123;runtime.callback.url&#125;&#125;</code> in async task requests. Required for async tasks.</td></tr>
             <tr><td><code>runtime.callback.hmacSecret</code></td><td><code>""</code></td><td>HMAC-SHA256 secret for signing and validating callback tokens. Required for async tasks.</td></tr>
             <tr><td><code>runtime.callback.hmacKid</code></td><td><code>default</code></td><td>Key ID embedded in the token header for future key rotation.</td></tr>
@@ -95,9 +98,8 @@
             <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">REDIS</td></tr>
             <tr><td><code>redis.topology</code></td><td><code>STANDALONE</code></td><td>Redis client mode: <code>STANDALONE</code> or <code>CLUSTER</code>.</td></tr>
             <tr><td><code>redis.url</code></td><td><code>redis://localhost:6379</code></td><td>Connection URL used in standalone mode.</td></tr>
-            <tr><td><code>redis.pool.maxTotal</code></td><td><code>16</code></td><td>Maximum total connections in the Redis connection pool.</td></tr>
-            <tr><td><code>redis.pool.maxIdle</code></td><td><code>16</code></td><td>Maximum idle connections kept in the pool.</td></tr>
-            <tr><td><code>redis.pool.minIdle</code></td><td><code>0</code></td><td>Minimum idle connections maintained in the pool.</td></tr>
+            <tr><td><code>redis.commandTimeoutMillis</code></td><td><code>5000</code></td><td>Upper bound for any Redis command. While disconnected, commands fail immediately instead of queueing. Since 2.1.0.</td></tr>
+            <tr><td><code>redis.pool.*</code></td><td><em>ignored</em></td><td>Deprecated since 2.1.0: Trama uses one multiplexed connection per process.</td></tr>
             <tr><td><code>redis.cluster.nodes</code></td><td><code>[]</code></td><td>Seed nodes used when <code>redis.topology=CLUSTER</code>.</td></tr>
             <tr><td><code>redis.queue.keyPrefix</code></td><td><code>saga:executions</code></td><td>Prefix for shard-aware ready and in-flight queue keys.</td></tr>
             <tr><td><code>redis.consumer.batchSize</code></td><td><code>50</code></td><td>Messages claimed per poll cycle.</td></tr>
@@ -111,7 +113,7 @@
             <tr><td><code>redis.sharding.claimerCount</code></td><td><code>4</code></td><td>Parallel shard claimers per worker process.</td></tr>
 
             <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">DATABASE</td></tr>
-            <tr><td><code>database.host</code></td><td><code>db</code></td><td>Postgres host. Postgres is always required: it stores definitions, execution status and step history (<code>runtime.store</code> only selects where hot execution state lives).</td></tr>
+            <tr><td><code>database.host</code></td><td><code>db</code></td><td>Postgres host. Postgres is always required: it is the source of truth for definitions, each execution's state and resume point, step history and join barriers.</td></tr>
             <tr><td><code>database.port</code></td><td><code>5432</code></td><td>Postgres port.</td></tr>
             <tr><td><code>database.database</code></td><td><code>saga</code></td><td>Postgres database name.</td></tr>
             <tr><td><code>database.user</code></td><td><code>saga</code></td><td>Postgres user.</td></tr>
@@ -127,11 +129,19 @@
             <tr><td><code>http.socketTimeoutMillis</code></td><td><code>30000</code></td><td>Outbound HTTP socket read timeout.</td></tr>
 
             <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">RATE LIMIT</td></tr>
-            <tr><td><code>rateLimit.enabled</code></td><td><code>true</code></td><td>Enable per-saga rate limiting.</td></tr>
-            <tr><td><code>rateLimit.maxFailures</code></td><td><code>5</code></td><td>Failure count within the window before an execution is blocked.</td></tr>
+            <tr><td><code>rateLimit.enabled</code></td><td><code>true</code></td><td>Per-workflow breaker: after repeated <em>worker</em> failures (exceptions while processing), delay that workflow's executions. Executions that end <code>FAILED</code> by their own logic don't count (since 2.1.0). Fails open if Redis is unavailable.</td></tr>
+            <tr><td><code>rateLimit.maxFailures</code></td><td><code>5</code></td><td>Worker failures within the window before the workflow is paused.</td></tr>
             <tr><td><code>rateLimit.windowMillis</code></td><td><code>60000</code></td><td>Sliding window duration for failure counting.</td></tr>
             <tr><td><code>rateLimit.blockMillis</code></td><td><code>60000</code></td><td>How long a blocked execution is held before retry is allowed.</td></tr>
             <tr><td><code>rateLimit.keyPrefix</code></td><td><code>saga:rate</code></td><td>Redis key prefix for rate-limit counters.</td></tr>
+
+            <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">RECOVERY</td></tr>
+            <tr><td><code>reconciler.enabled</code></td><td><code>true</code></td><td>Re-send running or sleeping executions that stopped advancing (e.g. their Redis queue item was lost), from their Postgres checkpoint. Since 2.1.0.</td></tr>
+            <tr><td><code>reconciler.staleAfterMillis</code></td><td><code>120000</code></td><td>How long past its due time an execution must be idle to be re-sent. Keep it well above the longest single node (the HTTP request timeout).</td></tr>
+            <tr><td><code>reconciler.intervalMillis</code></td><td><code>30000</code></td><td>How often the reconciler scans.</td></tr>
+            <tr><td><code>reconciler.batchSize</code></td><td><code>200</code></td><td>Executions re-sent per scan.</td></tr>
+            <tr><td><code>joinCompletionScanner.intervalMillis</code></td><td><code>30000</code></td><td>Backstop that resumes a parent whose branches all finished. Default 5 minutes before 2.1.0.</td></tr>
+            <tr><td><code>callbackTimeoutScanner.intervalMillis</code></td><td><code>300000</code></td><td>Backstop that times out callback waits whose deadline passed (<code>bufferSeconds</code> grace, default 120).</td></tr>
 
             <tr><td colspan="3" style="background:transparent;padding-top:0.8rem;font-size:0.75rem;letter-spacing:0.05em;opacity:0.5;">MAINTENANCE</td></tr>
             <tr><td><code>maintenance.enabled</code></td><td><code>true</code></td><td>Enable the background partition maintenance job (Postgres only).</td></tr>
@@ -157,7 +167,7 @@
     hmacKid: "default"</code></pre></div>
 
         <h3 id="redis-cluster">Redis Cluster</h3>
-        <p>Trama now supports Redis Cluster-aware queue sharding. Ready/in-flight keys, execution metadata, and rate-limit keys are written with hash tags so multi-key Lua operations stay inside one Redis slot.</p>
+        <p>Trama supports Redis Cluster-aware queue sharding. Ready/in-flight queue keys and rate-limit keys are written with hash tags so multi-key Lua operations stay inside one Redis slot. The due-work index is a single key.</p>
         <ul>
           <li>Use <code>redis.topology: CLUSTER</code> to enable the Lettuce cluster client.</li>
           <li>Set <code>redis.cluster.nodes</code> to one or more reachable cluster seed nodes.</li>
@@ -189,6 +199,8 @@
         <h3 id="env">Environment Overrides</h3>
         <p>Supported overrides include:</p>
         <div class="codeblock"><pre><code>RUNTIME_ENABLED
+RUNTIME_WORKERCOUNT       # since 2.1.0
+RUNTIME_PREFETCH          # since 2.1.0
 RUNTIME_EMPTYPOLLDELAYMILLIS
 RUNTIME_CALLBACK_BASEURL
 RUNTIME_CALLBACK_HMACSECRET
@@ -199,6 +211,11 @@ REDIS_URL
 REDIS_TOPOLOGY            # STANDALONE | CLUSTER (since 2.0.1)
 REDIS_CLUSTER_NODES       # comma-separated seed nodes (since 2.0.1)
 REDIS_SHARDING_VIRTUALSHARDCOUNT
+REDIS_COMMANDTIMEOUTMILLIS            # since 2.1.0
+RECONCILER_ENABLED                    # since 2.1.0
+RECONCILER_STALEAFTERMILLIS           # since 2.1.0
+RECONCILER_INTERVALMILLIS             # since 2.1.0
+RATELIMIT_ENABLED                     # since 2.1.0
 DATABASE_HOST
 DATABASE_PORT
 DATABASE_DATABASE
@@ -218,7 +235,7 @@ telemetry:
   enabled: false</code></pre></div>
 
         <h4>Prod profile (split API and Workers)</h4>
-        <p>In production, run API pods separately from worker pods. API instances should not process queue jobs.</p>
+        <p>In production you can run API pods separately from worker pods. An API pod (<code>runtime.enabled: false</code>) accepts runs and callbacks and queues them; worker pods execute them. Since 2.1.0; earlier versions answered 503 in this mode.</p>
 
         <h4>API deployment profile</h4>
         <div class="codeblock"><pre><code>runtime:
@@ -234,8 +251,7 @@ database:
         <h4>Worker deployment profile</h4>
         <div class="codeblock"><pre><code>runtime:
   enabled: true
-  workerCount: 8
-  bufferSize: 500
+  workerCount: 32
   maxStepsPerExecution: 25
 redis:
   consumer:
@@ -251,8 +267,7 @@ telemetry:
         <h4>Worker deployment profile with Redis Cluster</h4>
         <div class="codeblock"><pre><code>runtime:
   enabled: true
-  workerCount: 8
-  bufferSize: 500
+  workerCount: 32
 redis:
   topology: "CLUSTER"
   cluster:

@@ -90,19 +90,30 @@
           <li><code>SagaExecutionProcessor</code>: worker orchestration, ack/retry control, and rate-limit integration.</li>
           <li><code>WorkflowExecutor</code>: node dispatch, retry policy decisions, compensation transitions. Delegates to <code>TaskNodeHandler</code> (sync and async HTTP) and <code>SwitchNodeHandler</code> (JSON Logic branching). Split nodes are handled directly: each branch becomes an independent sub-execution enqueued through the same pipeline, and a join node barriers on all of them reaching a terminal state before the parent continues.</li>
           <li><code>CallbackReceiver</code>: validates HMAC-signed callback tokens and re-enqueues async executions to resume.</li>
-          <li><code>SagaExecutionStore</code>: persistence abstraction (Redis/Postgres backing).</li>
+          <li><code>SagaExecutionStore</code>: persistence. Postgres is the source of truth for each execution's state and resume point, step history, parked state and join barriers.</li>
+          <li><code>SagaExecutionRedisConsumer</code>: claims due work from the Redis queue shards this pod owns (rendezvous hashing over live pods), renews claims while they run.</li>
+          <li><code>ExecutionReconciler</code>: re-sends executions that stopped advancing, from their Postgres checkpoint.</li>
+        </ul>
+
+        <h3 id="durability">State and durability</h3>
+        <p>Since 2.1.0, every node boundary writes the execution's <strong>checkpoint</strong> to Postgres in one statement: its state, a sequence number, and the step result. Every write is a compare-and-set on that sequence. A worker holding an outdated copy of the execution therefore cannot overwrite newer progress or a final status. Such a copy can come from a redelivered queue item, or from a worker that paused past its claim lease.</p>
+        <ul>
+          <li><strong>Redis holds the queue, claims and callback nonces</strong>, not execution state. If Redis loses data, executions resume from their checkpoint through the reconciler (after <code>reconciler.staleAfterMillis</code>).</li>
+          <li><strong>Delivery is at-least-once, outcomes are exactly-once.</strong> An HTTP call in flight when its worker crashes or stalls is made again, but no execution ever ends with two outcomes or a wrong one. Make downstream endpoints idempotent (e.g. <code>Idempotency-Key: &#123;&#123;sagaId&#125;&#125;-&lt;nodeId&gt;</code>).</li>
+          <li><strong>The guarantees are tested.</strong> They are checked with fault injection (Redis restarts, outages and data loss; worker kills and pauses; Postgres cuts) in the <a href="https://github.com/thiagoribeiro/trama/blob/main/docs/validation-report.md">validation report</a>.</li>
         </ul>
 
         <h3 id="lifecycle">Execution Lifecycle</h3>
         <ol>
           <li>Definition is validated and stored (or provided inline).</li>
-          <li>Execution request enqueues a workflow payload.</li>
-          <li>Consumer claims ready messages and hands them to workers.</li>
+          <li>The execution is admitted: its row is written to Postgres, then it is enqueued in Redis.</li>
+          <li>The consumer claims due work from the shards this pod owns and hands it to workers (at most <code>workerCount + prefetch</code> at a time).</li>
           <li>Executor dispatches each node — sync task nodes make HTTP calls immediately; async task nodes fire a request, pause the execution, and wait for a callback.</li>
           <li>For async nodes: the external service POSTs to the callback endpoint with a signed token. The callback receiver validates the token and re-enqueues the execution to resume from the next node.</li>
           <li>Switch nodes evaluate JSON Logic expressions and route to the matching branch without making any HTTP call.</li>
           <li>Split nodes spawn one independent sub-execution per branch (each with its own id and retry/compensation lifecycle) and park the parent until its join node observes every branch reaching a terminal state — nesting works the same way at any depth.</li>
           <li>On failure, the executor applies the retry or backoff policy, then drives compensation in reverse order if retries are exhausted.</li>
+          <li>Each completed node is checkpointed in Postgres before the next one runs; the final status is written the same way.</li>
           <li>Metrics and traces are emitted throughout all stages.</li>
         </ol>
 
@@ -131,7 +142,8 @@ end
 
 P[Saga Processor]:::runtime
 E[Saga Executor]:::runtime
-ST[Postgres Store]:::infra
+ST[Postgres: state + checkpoints]:::infra
+R[Reconciler]:::runtime
 
 M[Prometheus Metrics]:::obs
 T[OpenTelemetry Traces]:::obs
@@ -141,13 +153,16 @@ end
 S[External Services]:::external
 
 C --> A
+A -->|admit| ST
 A --> Q
 A --> CB
 CB --> Q
 Q --> P
 P --> E
 E --> S
-E --> ST
+E -->|checkpoint| ST
+ST -.-> R
+R -->|re-send stalled| Q
 
 S -->|async callback| A
 

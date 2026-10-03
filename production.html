@@ -111,11 +111,13 @@
     claimerCount: 4</code></pre></div>
         <p>During shutdown, a worker marks itself as not ready, stops claiming new Redis queue work, unregisters from shard membership, and drains already-claimed executions before closing Redis. That lets another worker take ownership without abandoning in-flight items.</p>
         <p>While a worker is processing an execution it keeps renewing its claim (every third of <code>redis.consumer.processingTimeoutMillis</code>, 20 s by default), so slow but healthy executions are never handed to a second worker. If a pod dies without draining, its renewals stop: once the lease expires, the shard's current owner moves that work back to the ready queue on its next claim pass, so recovery takes roughly the lease length.</p>
+        <p>A worker that pauses past its lease (long GC pause, VM migration, host suspend) is fenced. It stops before its next call, and none of its writes can land, because each one is a compare-and-set on the execution's checkpoint sequence in Postgres. Since 2.1.0.</p>
 
         <h3 id="scaling">Scaling Guidelines</h3>
         <ul>
           <li>Scale horizontally by adding runtime instances.</li>
-          <li>Tune <code>runtime.workerCount</code> and queue batch size together.</li>
+          <li><code>runtime.workerCount</code> (default 32 since 2.2.0) is how many executions a process runs at once, and so how many concurrent calls it makes to downstream services. Workers mostly wait on HTTP: raise it until CPU saturates. On the reference host one process went from 55 workflows/s at 4 workers to 231 at 32.</li>
+          <li>Keep <code>database.pool.maxPoolSize</code> in proportion: each completed node writes one checkpoint.</li>
           <li>When running Redis Cluster, tune <code>redis.sharding.virtualShardCount</code> and <code>redis.sharding.claimerCount</code> with replica count.</li>
           <li>Track enqueue/dequeue and p95 saga latency as primary signals.</li>
         </ul>
@@ -123,8 +125,10 @@
         <h3 id="resilience">Resilience Playbook</h3>
         <ul>
           <li>Alert on failure ratio and queue pressure.</li>
-          <li>Use <code>POST /workflows/{id}/retry</code> for recoverable failures. It only accepts <code>FAILED</code> executions (<code>409</code> otherwise) and re-runs them from the first step with the original payload.</li>
-          <li>Keep clear runbooks for Redis/Postgres outages.</li>
+          <li>Use <code>POST /workflows/{id}/retry</code> for recoverable failures. It only accepts <code>FAILED</code> executions (<code>409</code> otherwise) and re-runs them from the failed step with the original payload. v1 (steps) definitions only.</li>
+          <li><strong>Redis outages.</strong> Claim loops back off and resume on their own; <code>/readyz</code> reports <code>consumer_stalled</code> meanwhile. Runs and callbacks are still accepted, because they are written to Postgres and queued once Redis is back.</li>
+          <li><strong>Redis data loss</strong> (restart without persistence, failover). No execution is lost: the reconciler re-sends anything that stopped advancing, from its Postgres checkpoint, after <code>reconciler.staleAfterMillis</code> (2 min). AOF <code>everysec</code> is recommended to shorten that delay, but it is not required for correctness.</li>
+          <li><strong>Postgres outages</strong> pause progress; nothing is lost. Watch <code>saga_redis_errors_total</code> and the DB pool metrics.</li>
           <li>When a worker stops heartbeating, its membership entry expires after <code>redis.sharding.membershipTtlMillis</code> and its shards are reassigned on the next refresh; work it had claimed returns to the queue once its lease expires.</li>
           <li>Watch for <code>claims expired before renewal</code> in worker logs: a pod stalled long enough (GC pause, Redis outage) for a claim to expire, so that execution may run twice. Delivery is at-least-once, so keep task endpoints idempotent.</li>
         </ul>
@@ -141,17 +145,27 @@
         <table>
           <thead><tr><th>Area</th><th>Check</th></tr></thead>
           <tbody>
-            <tr><td>Availability</td><td><code>/healthz</code> and <code>/readyz</code> monitored.</td></tr>
+            <tr><td>Availability</td><td><code>/readyz</code> for readiness (fails fast on Redis or consumer stalls), <code>/healthz</code> for liveness (fails after <code>runtime.livenessStallMillis</code> without progress).</td></tr>
             <tr><td>Latency</td><td><code>saga_duration_seconds</code> p95 tracked per definition.</td></tr>
             <tr><td>Failures</td><td><code>saga_failed_total</code> alert with reason dimension.</td></tr>
             <tr><td>Queue</td><td><code>saga_enqueue_total</code> vs <code>saga_dequeue_total</code>.</td></tr>
+            <tr><td>Recovery</td><td><code>saga_reconciled_total</code> (executions re-sent after losing their queue item), <code>saga_fenced_total</code> (stale or paused workers stopped), <code>saga_redis_errors_total</code>.</td></tr>
             <tr><td>Redis Cluster</td><td><code>saga_redis_active_pods</code>, <code>saga_redis_owned_shards</code>, and <code>saga_redis_membership_refresh_age_ms</code> tracked.</td></tr>
             <tr><td>Tracing</td><td>OTEL exporter healthy and sampled correctly.</td></tr>
           </tbody>
         </table>
 
         <h3 id="upgrading">Upgrading</h3>
-        <p>Read the <a href="https://github.com/thiagoribeiro/trama/blob/main/CHANGELOG.md">changelog</a> before upgrading. Notes for <strong>1.x → 2.x</strong>:</p>
+        <p>Read the <a href="https://github.com/thiagoribeiro/trama/blob/main/CHANGELOG.md">changelog</a> before upgrading.</p>
+        <p>Notes for <strong>2.0.x → 2.1 / 2.2</strong>:</p>
+        <ul>
+          <li><strong>Rolling upgrades are supported.</strong> Liquibase adds the checkpoint columns on startup (additive changeset <code>009</code>), and executions started by 2.0.x continue under the new version.</li>
+          <li><strong>Deprecated keys</strong> are accepted but ignored: <code>redis.pool.*</code> and <code>runtime.bufferSize</code>.</li>
+          <li><strong>2.2.0 raises <code>runtime.workerCount</code> from 4 to 32.</strong> That is 8× the concurrent downstream calls per process. Set <code>RUNTIME_WORKERCOUNT=4</code> to keep the old load.</li>
+          <li><strong>Logging (2.2.0).</strong> Per-node log lines moved from INFO to DEBUG; each execution now logs one INFO <code>saga finished</code> line.</li>
+          <li><strong>Rate limiter (2.1.0).</strong> It counts only worker failures, not executions that end <code>FAILED</code>.</li>
+        </ul>
+        <p>Notes for <strong>1.x → 2.x</strong>:</p>
         <ul>
           <li>The HTTP API moved from <code>/sagas/*</code> to <code>/workflows/*</code>, including the async callback URL (services that use <code>{{runtime.callback.url}}</code> need no change).</li>
           <li>The shard → pod mapping changed in 2.0.0. During a rolling deploy with mixed versions a shard can briefly have no owner, so prefer a quick rollout or a recreate strategy for that upgrade.</li>
