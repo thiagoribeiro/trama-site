@@ -86,7 +86,11 @@
             <tr><td><code>saga_failed_total</code></td><td>Counter</td><td>Failures by reason</td></tr>
             <tr><td><code>saga_retried_total</code></td><td>Counter</td><td>Retry scheduling rate</td></tr>
             <tr><td><code>saga_rate_limited_total</code></td><td>Counter</td><td>Rate-limited executions</td></tr>
-            <tr><td><code>saga_redis_claim_scans_total</code></td><td>Counter</td><td>Redis shard claim scans performed by queue claimers.</td></tr>
+            <tr><td><code>saga_redis_claim_scans_total</code></td><td>Counter</td><td>Redis shard claim scans. Since 2.1.0, claimers only visit shards with due work, so this tracks real work rather than idle polling.</td></tr>
+            <tr><td><code>saga_redis_errors_total</code></td><td>Counter</td><td>Redis calls that failed in a background loop and were retried with backoff, by <code>operation</code> (since 2.1.0)</td></tr>
+            <tr><td><code>saga_fenced_total</code></td><td>Counter</td><td>Work dropped because the worker no longer owned it, by <code>reason</code>: <code>lease_lost</code> (paused past its claim lease) or <code>stale_checkpoint</code> (another copy got ahead). Since 2.1.0.</td></tr>
+            <tr><td><code>saga_reconciled_total</code></td><td>Counter</td><td>Executions re-sent from their Postgres checkpoint after their queue item was lost, by <code>status</code> (since 2.1.0)</td></tr>
+            <tr><td><code>saga_inmemory_queue_size</code></td><td>Gauge</td><td>Executions claimed by this process and waiting for a free worker</td></tr>
             <tr><td><code>saga_redis_active_pods</code></td><td>Gauge</td><td>Healthy worker pods seen in Redis membership.</td></tr>
             <tr><td><code>saga_redis_owned_shards</code></td><td>Gauge</td><td>Virtual shards currently assigned to this worker.</td></tr>
             <tr><td><code>saga_redis_membership_refresh_age_ms</code></td><td>Gauge</td><td>Age of the last successful membership refresh.</td></tr>
@@ -111,7 +115,7 @@
           <li><code>final_status</code> on <code>saga_duration_seconds</code>.</li>
           <li><code>node_kind</code> (<code>task</code> | <code>switch</code> | <code>sleep</code> | <code>split</code>) and <code>mode</code> (<code>sync</code> | <code>async</code> for tasks, <code>none</code> otherwise) on <code>saga_node_duration_seconds</code>.</li>
           <li><code>result</code> (<code>case</code> | <code>default</code>) on <code>saga_switch_evaluated_total</code>.</li>
-          <li>Redis membership gauges are process-level metrics and do not add definition labels.</li>
+          <li>Redis membership gauges and the recovery counters (<code>saga_redis_errors_total</code>, <code>saga_fenced_total</code>, <code>saga_reconciled_total</code>) are process-level and do not add definition labels.</li>
         </ul>
 
         <h3 id="grafana">Grafana Dashboard</h3>
@@ -127,6 +131,18 @@
           <li><code>saga_redis_active_pods</code> dropping unexpectedly during rollout.</li>
           <li><code>saga_redis_owned_shards</code> equal to <code>0</code> on a worker pod that should be active.</li>
           <li>Worker log <code>claims expired before renewal</code>: a pod stalled past its claim lease, so an execution may be re-delivered.</li>
+          <li><code>saga_redis_errors_total</code> growing: Redis unreachable or failing; <code>/readyz</code> reports <code>consumer_stalled</code> if it lasts.</li>
+          <li><code>saga_reconciled_total</code> above zero: queue items were lost (Redis data loss) and executions were recovered with a delay.</li>
+          <li><code>saga_fenced_total{reason="lease_lost"}</code> above zero: workers are pausing past their claim lease (GC, CPU starvation).</li>
+        </ul>
+
+        <h3 id="logs">Logs</h3>
+        <p>Logs are structured JSON (logstash encoder) with the execution id and trace context in the MDC. Since 2.2.0, INFO carries one line per execution, <code>saga finished</code>, with <code>status</code> and <code>durationMs</code>, plus lifecycle events: retries, compensation, sleeps, callback waits and timeouts. The per-node lines (<code>executing node</code>, <code>node completed</code>) are at DEBUG; a failed node still logs <code>node completed</code> at INFO.</p>
+
+        <h3 id="health">Health probes</h3>
+        <ul>
+          <li><code>/readyz</code>: <code>503</code> while shutting down, when Redis is unreachable, or when the consumer has made no progress for 3× the claim lease (<code>consumer_stalled</code>).</li>
+          <li><code>/healthz</code>: <code>503</code> only after <code>runtime.livenessStallMillis</code> (2 min) without consumer progress, so an orchestrator restarts a stuck process.</li>
         </ul>
 
         <h3 id="tracing">Tracing</h3>

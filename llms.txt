@@ -23,6 +23,7 @@ API and source artifacts:
 - README: https://github.com/thiagoribeiro/trama/blob/main/README.md
 - Grafana dashboard: https://github.com/thiagoribeiro/trama/blob/main/grafana/trama-saga-dashboard.json
 - Changelog: https://github.com/thiagoribeiro/trama/blob/main/CHANGELOG.md
+- Validation report (durability, recovery and load): https://github.com/thiagoribeiro/trama/blob/main/docs/validation-report.md
 - Releases: https://github.com/thiagoribeiro/trama/releases
 
 Notes:

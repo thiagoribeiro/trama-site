@@ -335,7 +335,7 @@
           </article>
           <article class="card feature-card">
             <h3>Durable execution state</h3>
-            <p>Persist execution state and inspect workflow progress through the API.</p>
+            <p>Every node is checkpointed in Postgres with fenced writes, so executions survive worker crashes and Redis data loss. This is <a href="https://github.com/thiagoribeiro/trama/blob/main/docs/validation-report.md">tested with fault injection</a>.</p>
           </article>
           <article class="card feature-card">
             <h3>Observability primitives</h3>
