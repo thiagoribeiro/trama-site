@@ -105,7 +105,7 @@
             <tr><td><code>redis.consumer.batchSize</code></td><td><code>50</code></td><td>Messages claimed per poll cycle.</td></tr>
             <tr><td><code>redis.consumer.processingTimeoutMillis</code></td><td><code>20000</code></td><td>In-flight claim lease. Workers renew the claims they are still processing every third of it, so it only bounds how long work claimed by a pod that died waits before being re-delivered.</td></tr>
             <tr><td><code>redis.consumer.requeueIntervalMillis</code></td><td><em>ignored</em></td><td>Deprecated since 2.0.0: expired claims are recovered by the regular claim pass.</td></tr>
-            <tr><td><code>redis.sharding.virtualShardCount</code></td><td><code>1024</code></td><td>Virtual shard fan-out used by rendezvous allocation.</td></tr>
+            <tr><td><code>redis.sharding.virtualShardCount</code></td><td><code>64</code></td><td>Queue shards that pods divide by rendezvous allocation. Must be the same on every pod; it bounds how many pods can share the work. Lowering it is safe: work in removed shards is moved over automatically. Default <code>1024</code> before 2.3.0.</td></tr>
             <tr><td><code>redis.sharding.membershipKey</code></td><td><code>saga:runtime:pods</code></td><td>Redis ZSET tracking live worker pods.</td></tr>
             <tr><td><code>redis.sharding.membershipTtlMillis</code></td><td><code>10000</code></td><td>Worker membership entry TTL.</td></tr>
             <tr><td><code>redis.sharding.heartbeatIntervalMillis</code></td><td><code>3000</code></td><td>How often each worker refreshes its membership entry.</td></tr>
@@ -189,7 +189,7 @@
     processingTimeoutMillis: 20000
   sharding:
     podId: "${HOSTNAME}"
-    virtualShardCount: 1024
+    virtualShardCount: 64
     membershipKey: "saga:runtime:pods"
     membershipTtlMillis: 10000
     heartbeatIntervalMillis: 3000
@@ -280,7 +280,7 @@ redis:
     processingTimeoutMillis: 20000
   sharding:
     podId: "${HOSTNAME}"
-    virtualShardCount: 1024
+    virtualShardCount: 64
     membershipKey: "saga:runtime:pods"
     membershipTtlMillis: 10000
     heartbeatIntervalMillis: 3000
