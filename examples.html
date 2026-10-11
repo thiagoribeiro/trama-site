@@ -251,7 +251,7 @@
   }'</code></pre></div>
 
         <h3 id="template">Templates</h3>
-        <p>URLs, headers and bodies are <a href="https://mustache.github.io/">Mustache</a> templates. Available variables:</p>
+        <p>URLs, headers and bodies are templates using <a href="https://mustache.github.io/">Mustache</a> <code>{{ }}</code> references. Since <strong>3.0</strong>, JSON bodies use typed replacement (see <a href="#typed-json">JSON bodies</a> below). Available variables:</p>
         <ul>
           <li><code>payload.*</code> (alias <code>input.*</code>): the run payload.</li>
           <li><code>nodes.&lt;id&gt;.response.body.*</code>: the response of an earlier node; <code>prev.body.*</code> is the previous node's.</li>
@@ -264,20 +264,33 @@
   "headers": { "Content-Type": "application/json", "X-Tenant": "{{payload.tenant}}" },
   "body": {
     "amount": "{{payload.amount}}",
-    "note": "{{payload.note}}"
+    "note": "Order {{payload.orderId}}: {{payload.note}}"
   }
 }</code></pre></div>
+        <p>With payload <code>{"amount": 49.9, "orderId": 7, "note": "gift"}</code> the body is sent as <code>{"amount": 49.9, "note": "Order 7: gift"}</code>: <code>amount</code> stays a number.</p>
         <p><code>{{ }}</code> escapes values for where they land, so a value such as <code>O'Brien "Co" \path</code> or one with a line break reaches the service intact:</p>
         <table>
           <thead><tr><th>Where</th><th><code>{{ }}</code> inserts</th></tr></thead>
           <tbody>
-            <tr><td>JSON body (<code>Content-Type</code> contains <code>json</code>, or no <code>Content-Type</code> and the body starts with <code>{</code> / <code>[</code>)</td><td>JSON string escaping</td></tr>
+            <tr><td>JSON body (<code>Content-Type</code> contains <code>json</code>, or no <code>Content-Type</code> and the body starts with <code>{</code> / <code>[</code>)</td><td>typed JSON value (3.0+; see below)</td></tr>
             <tr><td>XML / HTML body</td><td>entity escaping</td></tr>
             <tr><td><code>application/x-www-form-urlencoded</code> body</td><td>form encoding</td></tr>
             <tr><td>URL, headers, any other body</td><td>the literal value (line breaks are removed from headers)</td></tr>
           </tbody>
         </table>
-        <p>Use <code>{{{ }}}</code> to insert a raw value anywhere. Values are scalars: an object or array renders as text, not as JSON.</p>
+        <p>Outside JSON bodies, use <code>{{{ }}}</code> to insert a raw value. There, values are scalars: an object or array renders as text.</p>
+
+        <h4 id="typed-json">JSON bodies (3.0+)</h4>
+        <ul>
+          <li><strong>A whole-value reference keeps its JSON type.</strong> <code>"{{payload.state}}"</code> sends the object, <code>"{{payload.count}}"</code> the number; booleans, null and arrays likewise.</li>
+          <li><strong>Text around a reference</strong> (<code>"Order {{payload.id}}"</code>) accepts scalars only. Put collections in a value of their own.</li>
+          <li><strong>A missing reference is an error, not an empty value.</strong> A missing key, an out-of-range index or a path through null fails with the JSON field and the full reference. A task or compensation then fails without being sent or retried. An explicit <code>null</code> still renders as JSON <code>null</code>.</li>
+          <li><strong>Initialize state explicitly.</strong> A loop cannot read its own node before that node has run. Seed counters and state in the payload.</li>
+          <li><strong>List indexes</strong> work with dots or brackets: <code>{{nodes.join.response.body.branches.0.result.price}}</code>.</li>
+          <li><strong>No template tricks in JSON:</strong> triple braces, sections and lambdas are rejected. Values are never re-read as templates.</li>
+          <li><code>{"__trama_literal_json__": VALUE}</code> sends <code>VALUE</code> as is, without rendering, which is useful for data that contains <code>{{ }}</code>. The receiving service never sees the envelope.</li>
+        </ul>
+        <p>Full rules: <a href="https://github.com/thiagoribeiro/trama/blob/main/docs/typed-json-transport.md">typed JSON transport</a>.</p>
 
         <h3 id="v2-switch">Switch Branching</h3>
         <p>Run an inline saga that routes to a different payment node based on <code>paymentMethod</code>. The <code>choose-payment</code> switch node evaluates a JSON Logic expression against the payload (available as <code>payload</code> or its alias <code>input</code>, alongside <code>nodes</code>, <code>prev</code> and <code>step</code>) and dispatches to <code>pix-payment</code>, <code>card-payment</code>, or a fallback.</p>

@@ -157,6 +157,13 @@
 
         <h3 id="upgrading">Upgrading</h3>
         <p>Read the <a href="https://github.com/thiagoribeiro/trama/blob/main/CHANGELOG.md">changelog</a> before upgrading.</p>
+        <p>Notes for <strong>2.x → 3.0</strong>. This release is breaking for JSON body templates:</p>
+        <ul>
+          <li><strong>JSON bodies use typed replacement only.</strong> Whole-value references keep their JSON type, so numbers stop being sent as strings. A missing reference fails the node instead of rendering empty. Triple braces and sections are rejected in JSON bodies. See <a href="examples.html#typed-json">JSON bodies</a>.</li>
+          <li><strong>Check persisted and running workflows before upgrading</strong>, and before rolling back. Bodies without templates, or whose references point to nodes that already ran, are unaffected. Workflows that relied on an absent value rendering as empty need explicit initial state. Workflows written for 3.0 (typed collections, literal envelopes) do not render correctly on 2.x.</li>
+          <li>The <code>X-Trama-Template-Mode</code> header is ignored. There is no database migration and no configuration change.</li>
+          <li><strong>Use 3.0.1 or later.</strong> In 3.0.0 and 2.x, a node that ran right after a <code>switch</code> lost its result once the execution resumed after a sleep or callback: 2.x rendered it empty, and 3.0.0 fails with <code>missing key</code>. 3.0.1 reads already stored results correctly.</li>
+        </ul>
         <p>Notes for <strong>2.3</strong>: <code>redis.sharding.virtualShardCount</code> defaults to 64 (was 1024). During a rolling deploy, pods on the old count keep claiming shards 64–1023 until they are replaced, and upgraded pods then move what is left. Set <code>REDIS_SHARDING_VIRTUALSHARDCOUNT=1024</code> to keep the old count.</p>
         <p>Notes for <strong>2.0.x → 2.1 / 2.2</strong>:</p>
         <ul>
