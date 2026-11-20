@@ -135,7 +135,7 @@
             <tr><td><span class="method get">GET</span></td><td><code>/metrics</code></td><td>Prometheus metrics</td></tr>
           </tbody>
         </table>
-        <p><strong>Retry</strong> only accepts executions in <code>FAILED</code> status (anything else returns <code>409</code>). It re-runs the saga from the first step with its original payload; steps completed before the failure were already compensated. Retrying v2 node-graph executions is not supported yet (<code>422</code>).</p>
+        <p><strong>Retry</strong> only accepts executions in <code>FAILED</code> status (anything else returns <code>409</code>). It resumes the saga from the step that failed, with its original payload. Retrying v2 node-graph executions is not supported yet (<code>422</code>).</p>
         <p><strong>Wake</strong> returns <code>202</code> when it cuts a sleep short, <code>200</code> if a wake-up is already under way, and <code>409</code> when the execution is not sleeping.</p>
 
         <h3 id="endpoint-details">Endpoint Details (from OpenAPI)</h3>

@@ -163,7 +163,7 @@
           <div>
             <p class="section-kicker">Execution Walkthrough</p>
             <h2>Watch Trama coordinate a branching workflow</h2>
-            <p class="walkthrough-subtitle">A stored workflow definition is created, execution starts, a switch node evaluates the payload and picks a branch, the selected branch fires an async task, execution pauses waiting for a callback, the callback resumes it, and the workflow completes.</p>
+            <p class="walkthrough-subtitle">A workflow definition is validated, an execution starts, a switch node evaluates the payload and picks a branch, the selected branch fires an async task, execution pauses waiting for a callback, the callback resumes it, and the workflow completes.</p>
             <p class="walkthrough-helper">The same execution model works with any service that can receive HTTP requests.</p>
           </div>
           <div class="walkthrough-controls">
@@ -178,16 +178,16 @@
             <li class="walkthrough-step" data-walkthrough-step data-step-index="0" tabindex="0">
               <span class="walkthrough-step-icon">1</span>
               <div class="walkthrough-step-copy">
-                <strong>1. Create stored definition</strong>
-                <span>Persist the reusable workflow definition before any run starts.</span>
+                <strong>1. Validate the definition</strong>
+                <span>Check node references and the switch default offline with <code>trama-validate</code>.</span>
               </div>
               <span class="walkthrough-step-state">idle</span>
             </li>
             <li class="walkthrough-step" data-walkthrough-step data-step-index="1" tabindex="0">
               <span class="walkthrough-step-icon">2</span>
               <div class="walkthrough-step-copy">
-                <strong>2. Run stored workflow</strong>
-                <span>Create an execution from the stored definition and input payload.</span>
+                <strong>2. Run the workflow</strong>
+                <span>Send the definition and its payload to <code>POST /workflows/run</code>.</span>
               </div>
               <span class="walkthrough-step-state">idle</span>
             </li>
@@ -227,7 +227,7 @@
               <span class="walkthrough-step-icon">7</span>
               <div class="walkthrough-step-copy">
                 <strong>7. Callback resumes execution</strong>
-                <span>The external service POSTs back with a signed token. Trama validates and re-enqueues.</span>
+                <span>The service POSTs to the callback URL with its signed token. Trama validates it and re-enqueues.</span>
               </div>
               <span class="walkthrough-step-state">idle</span>
             </li>
@@ -246,7 +246,7 @@
             <div class="walkthrough-panel-head">
               <span class="walkthrough-meta"><strong>executionId:</strong> <code data-walkthrough-execution>9c7a1f2e-3db0-4e4b-9c5e-2f8b6d5c1a77</code></span>
               <span class="walkthrough-meta walkthrough-meta-status" data-walkthrough-status-wrap><strong>status:</strong> <code data-walkthrough-status>READY</code></span>
-              <span class="walkthrough-meta"><strong>currentStep:</strong> <code data-walkthrough-current-step>definition-stored</code></span>
+              <span class="walkthrough-meta"><strong>currentStep:</strong> <code data-walkthrough-current-step>definition-validated</code></span>
             </div>
 
             <div class="walkthrough-block">
@@ -376,12 +376,36 @@
               <td>Centralizes workflow coordination without turning it into a platform project.</td>
             </tr>
             <tr>
-              <td><strong>Heavy workflow engines</strong></td>
-              <td>Powerful orchestration platforms designed for complex workflow management and platform-level automation.</td>
-              <td>Broader capabilities, but more operational and adoption overhead.</td>
+              <td><strong>Workflow platforms</strong> (Temporal, Cadence)</td>
+              <td>Workflows are code, written against an SDK and run by dedicated workers.</td>
+              <td>Arbitrary logic and long histories, at the cost of a new programming model, SDKs in every service and a platform to operate.</td>
             </tr>
           </tbody>
         </table>
+      </section>
+
+      <section id="measured">
+        <p class="section-kicker">Measured</p>
+        <h2>Checked against the faults that lose work.</h2>
+        <p class="narrative-copy">Every release since 2.1 runs through a fault-injection and load harness against Postgres, Redis and a mock downstream on one 8-thread host, with every setting at its default.</p>
+        <div class="grid-3">
+          <article class="card stat-card">
+            <p class="stat">0 / 0 / 0</p>
+            <h3>lost, stuck, wrong</h3>
+            <p>Across 20 scenario runs: Redis restarts with and without persistence, a 30&nbsp;s Redis outage, <code>FLUSHALL</code>, workers killed or frozen past their lease mid-call, a kill storm and overload.</p>
+          </article>
+          <article class="card stat-card">
+            <p class="stat">5,000 / 5,000</p>
+            <h3>under combined faults</h3>
+            <p>Workflows that finished with the expected outcome while a worker was killed, Redis was cut and Postgres was cut, in the same run.</p>
+          </article>
+          <article class="card stat-card">
+            <p class="stat">229 wf/s</p>
+            <h3>in one process</h3>
+            <p>64 workers running workflows of 3 sync HTTP tasks, at 12&nbsp;ms of Trama CPU per workflow. The harness shares the host, so treat it as relative.</p>
+          </article>
+        </div>
+        <p class="narrative-copy">Delivery is at-least-once: only the calls in flight when a worker died were made again. Method and full results are in the <a href="https://github.com/thiagoribeiro/trama/blob/main/docs/validation-report.md">validation report</a>.</p>
       </section>
 
       <section>
@@ -419,6 +443,12 @@
             </div>
           </article>
         </div>
+      </section>
+
+      <section id="used-by">
+        <p class="section-kicker">Used by</p>
+        <h2>RiteSmith: generated once, executed by Trama.</h2>
+        <p class="narrative-copy"><a href="https://ritesmith.run">RiteSmith</a> turns a natural-language intent into a workflow once, validates it, and hands it to Trama, which runs it from then on without calling an LLM again. Task nodes reach RiteSmith's capabilities and sandboxed Luau scripts through its <code>POST /trama/execute</code> endpoint.</p>
       </section>
     </main>
 

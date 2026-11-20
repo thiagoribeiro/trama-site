@@ -216,7 +216,8 @@
 }</code></pre></div>
 
         <h3 id="stored">Run Stored Definition</h3>
-        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/definitions/order-saga/v1/run \
+        <p>Running a stored definition by name and version works for linear <code>steps</code> (v1) definitions only for now. A stored node graph like <code>order-saga</code> above answers <code>422</code>; run it inline instead (next section).</p>
+        <div class="codeblock"><pre><code>curl -X POST http://localhost:8080/workflows/definitions/&lt;name&gt;/&lt;version&gt;/run \
   -H 'Content-Type: application/json' \
   -d '{"payload": {"orderId": "ord-123", "amount": 99.5}}'</code></pre></div>
 
