@@ -157,6 +157,11 @@
 
         <h3 id="upgrading">Upgrading</h3>
         <p>Read the <a href="https://github.com/thiagoribeiro/trama/blob/main/CHANGELOG.md">changelog</a> before upgrading.</p>
+        <p>Notes for <strong>3.0 → 3.1</strong>. A dependency release: the API, definitions, template rendering and database schema are unchanged.</p>
+        <ul>
+          <li><strong>Redis 6.2 or later is required.</strong> Trama now reads sorted sets with <code>ZRANGE ... BYSCORE</code>. On older Redis that command is a syntax error, so pods cannot refresh the active-pod list or find shards with due work, and executions stop being picked up. Check <code>redis_version</code> in <code>INFO server</code> first; Redis 7 is recommended.</li>
+          <li><strong>Rolling upgrades work.</strong> Redis keys and stored data are unchanged, so 3.0.x and 3.1 pods can run side by side. No migration or configuration change is needed.</li>
+        </ul>
         <p>Notes for <strong>2.x → 3.0</strong>. This release is breaking for JSON body templates:</p>
         <ul>
           <li><strong>JSON bodies use typed replacement only.</strong> Whole-value references keep their JSON type, so numbers stop being sent as strings. A missing reference fails the node instead of rendering empty. Triple braces and sections are rejected in JSON bodies. See <a href="examples.html#typed-json">JSON bodies</a>.</li>

@@ -27,7 +27,7 @@ API and source artifacts:
 - Validation report (durability, recovery and load): https://github.com/thiagoribeiro/trama/blob/main/docs/validation-report.md
 - Releases: https://github.com/thiagoribeiro/trama/releases
 
-Key facts (current release 3.0.1):
+Key facts (current release 3.1.0; requires Redis 6.2+):
 - Workflows are JSON: linear "steps" (v1) or a node graph (v2) with task (sync/async HTTP), switch (JSON Logic), split/join, and sleep nodes.
 - Failure handling: fixed or exponential retries, then compensation of completed nodes in reverse order.
 - Async tasks receive an HMAC-signed, single-use callback URL: POST /workflows/{executionId}/node/{nodeId}/callback with X-Callback-Token.
