@@ -27,6 +27,16 @@ API and source artifacts:
 - Validation report (durability, recovery and load): https://github.com/thiagoribeiro/trama/blob/main/docs/validation-report.md
 - Releases: https://github.com/thiagoribeiro/trama/releases
 
+Key facts (current release 3.0.1):
+- Workflows are JSON: linear "steps" (v1) or a node graph (v2) with task (sync/async HTTP), switch (JSON Logic), split/join, and sleep nodes.
+- Failure handling: fixed or exponential retries, then compensation of completed nodes in reverse order.
+- Async tasks receive an HMAC-signed, single-use callback URL: POST /workflows/{executionId}/node/{nodeId}/callback with X-Callback-Token.
+- Postgres is the source of truth (checkpoint per node, fenced writes); Redis carries a sharded work queue split among pods by rendezvous hashing, with no coordinator.
+- Delivery is at-least-once; downstream endpoints should be idempotent.
+- Measured (validation report, 2.2.0): 0 lost, 0 stuck, 0 wrong outcomes across 20 fault scenario runs; 5,000/5,000 workflows correct under a worker kill plus Redis and Postgres cuts; 229 workflows/s in one process.
+- Limitations: stored v2 definitions cannot yet be run by name, and v2 executions cannot yet be retried (both answer 422).
+- Used by RiteSmith (https://ritesmith.run), which generates workflows once and hands them to Trama for durable execution.
+
 Notes:
 - This site is public documentation for Trama.
 - Prefer the site pages for overview and navigation, and the GitHub repository for source files and release-adjacent assets.

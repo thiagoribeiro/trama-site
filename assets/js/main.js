@@ -111,7 +111,9 @@ function initWalkthrough() {
               callbackUrl: "{{runtime.callback.url}}",
               callbackToken: "{{runtime.callback.token}}"
             }
-          }
+          },
+          acceptedStatusCodes: [202],
+          callback: { timeoutMillis: 60000 }
         },
         next: "create-shipment"
       },
@@ -151,17 +153,14 @@ function initWalkthrough() {
     {
       tone: "neutral",
       status: "READY",
-      currentStep: "definition-stored",
-      label: "Request",
+      currentStep: "definition-validated",
+      label: "Definition",
       primary: {
-        type: "http",
-        method: "POST",
-        path: "/workflows/definitions",
-        headers: ["Content-Type: application/json"],
+        type: "json",
         body: definitionRequest
       },
-      logs: ["definition received", "definition validated", "definition stored"],
-      badges: ["persisted", "definition"],
+      logs: ["trama-validate definition.json", "4 nodes (3 task, 1 switch, 1 async)", "all node references resolve"],
+      badges: ["validated", "definition"],
       timeline: ["active", "idle", "idle", "idle", "idle", "idle", "idle", "idle"],
       activePill: 0
     },
@@ -173,9 +172,10 @@ function initWalkthrough() {
       primary: {
         type: "http",
         method: "POST",
-        path: "/workflows/definitions/checkout/v1/run",
+        path: "/workflows/run",
         headers: ["Content-Type: application/json"],
         body: {
+          definition: { name: "checkout", version: "v1", "...": "definition above" },
           payload: {
             orderId: "ORD-789",
             paymentMethod: "pix"
@@ -230,7 +230,7 @@ function initWalkthrough() {
             verb: "POST",
             body: {
               orderId: "ORD-789",
-              callbackUrl: "https://trama.internal/callbacks/9c7a1f2e/pix-payment",
+              callbackUrl: `https://trama.internal/workflows/${executionId}/node/pix-payment/callback`,
               callbackToken: "eyJhbGciOiJIUzI1NiJ9..."
             }
           }
@@ -298,8 +298,8 @@ function initWalkthrough() {
       primary: {
         type: "http",
         method: "POST",
-        path: `/callbacks/${executionId}/pix-payment`,
-        headers: ["Content-Type: application/json"],
+        path: `/workflows/${executionId}/node/pix-payment/callback`,
+        headers: ["Content-Type: application/json", "X-Callback-Token: eyJhbGciOiJIUzI1NiJ9..."],
         body: {
           status: "success"
         }
@@ -308,7 +308,7 @@ function initWalkthrough() {
         label: "Response",
         type: "json",
         body: {
-          accepted: true
+          status: 202
         }
       },
       logs: ["callback received", "token validated", "execution re-enqueued", "resuming from create-shipment"],
@@ -346,7 +346,7 @@ function initWalkthrough() {
   ];
 
   const pillLabels = [
-    "stored definition",
+    "definition",
     "run request",
     "switch eval",
     "branch runs",

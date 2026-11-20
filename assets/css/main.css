@@ -874,6 +874,14 @@ section h2 {
   }
 }
 
+.stat-card .stat {
+  margin: 0 0 4px;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
 .use-case-card {
   min-height: 100%;
 }
